@@ -19,13 +19,17 @@ const std::string SINK_FILE_DIR = "sink_file_dir";															// 输出文件
 const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";									// 输入文件名，无需修改。
 const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";										// 输出文件名模板，无需修改。
 const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
-//COLUMN NUMBER 5
-//{"Name":"i_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+
+/*
+表定义类
+*/
 class ColumnDefType
-{
+{ //数据类型
+	std::string TypeName;
+	std::vector<int> Args;
 };
 class ColumnInfo
-{
+{ //列声明
 	std::string name;
 	int ordinal;
 	bool isUnsigned;
@@ -34,9 +38,36 @@ class ColumnInfo
 	int length;
 	int precision;
 	int scale;
+	ColumnInfo(const std::string &colStr)
+	{
+	}
+};
+class IndexInfo
+{ //索引声明
+};
+class PrimeKeyInfo
+{ //主键声明
 };
 class TableInfo
-{
+{ //表声明
+	std::string TableName;
+	std::string FromDataBase;
+	std::vector<ColumnInfo> Columns;
+	std::vector<IndexInfo> Indexs;
+	std::vector<PrimeKeyInfo> PrimeKeys;
+	TableInfo(std::ifstream &schemaInfo)
+	{
+		std::string tmp;
+		schemaInfo >> tmp >> this->FromDataBase >> tmp >> this->TableName;
+		int columnNums;
+		schemaInfo >> tmp >> tmp >> columnNums;
+		while (columnNums--)
+		{
+			std::string colStr;
+			std::getline(schemaInfo, colStr);
+			Columns.emplace_back(ColumnInfo(colStr));
+		}
+	}
 };
 
 class Demo
