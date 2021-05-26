@@ -1,11 +1,16 @@
-#include <fstream>
 #include <getopt.h>
-#include <iostream>
 #include <stdlib.h>
+
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 /**
  * @author dts，just for demo.
@@ -23,12 +28,15 @@ const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_li
 /*
 表定义类
 */
-class ColumnDefType
+struct ColumnDefType
 { //数据类型
-	std::string TypeName;
-	std::vector<int> Args;
+	std::string typeName;
+	std::vector<int> args;
+	ColumnDefType(const std::string &typeStr)
+	{
+	}
 };
-class ColumnInfo
+struct ColumnInfo
 { //列声明
 	std::string name;
 	int ordinal;
@@ -38,34 +46,55 @@ class ColumnInfo
 	int length;
 	int precision;
 	int scale;
-	ColumnInfo(const std::string &colStr)
+	ColumnInfo(const rapidjson::Document &doc) : columnDef(doc["ColumnDef"].GetString())
 	{
+		this->name = doc["Name"].GetString();
+		this->ordinal = doc["Ordinal"].GetInt();
+		this->isUnsigned = doc["Unsigned"].GetBool();
+		this->charSet = (doc["CharSet"].IsNull() ? "null" : doc["CharSet"].GetString());
+		this->length = (doc["Length"].IsNull() ? -1 : doc["Length"].GetInt());
+		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
+		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
 };
-class IndexInfo
+struct IndexInfo
 { //索引声明
+	//临时
+	std::string str;
+	IndexInfo(const std::string &indexStr)
+	{
+		this->str = indexStr;
+	}
 };
-class PrimeKeyInfo
+struct PrimeKeyInfo
 { //主键声明
+	//临时
+	std::string str;
+	PrimeKeyInfo(const std::string &primeKeyStr)
+	{
+		this->str = primeKeyStr;
+	}
 };
-class TableInfo
+struct TableInfo
 { //表声明
-	std::string TableName;
-	std::string FromDataBase;
-	std::vector<ColumnInfo> Columns;
-	std::vector<IndexInfo> Indexs;
-	std::vector<PrimeKeyInfo> PrimeKeys;
+	std::string tableName;
+	std::string fromDataBase;
+	std::vector<ColumnInfo> columns;
+	std::vector<IndexInfo> indexs;
+	std::vector<PrimeKeyInfo> primeKeys;
 	TableInfo(std::ifstream &schemaInfo)
 	{
 		std::string tmp;
-		schemaInfo >> tmp >> this->FromDataBase >> tmp >> this->TableName;
-		int columnNums;
+		schemaInfo >> tmp >> this->fromDataBase >> tmp >> this->tableName;
+		int columnNums = 0;
 		schemaInfo >> tmp >> tmp >> columnNums;
 		while (columnNums--)
 		{
 			std::string colStr;
 			std::getline(schemaInfo, colStr);
-			Columns.emplace_back(ColumnInfo(colStr));
+			rapidjson::Document doc;
+			doc.Parse(colStr.c_str());
+			columns.emplace_back(ColumnInfo(doc));
 		}
 	}
 };
