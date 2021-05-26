@@ -1,0 +1,1 @@
+./start.sh --input_dir "C://Progaming//Tianchi//demo-test" --output_dir "C://Progaming//Tianchi//demo-test//OUTPUT" --output_db_url "None_DB_location" --output_db_user "None_DB_user" --output_db_passwd "None_DB_password"
