@@ -34,6 +34,7 @@ struct ColumnDefType
 	std::vector<int> args;
 	ColumnDefType(const std::string &typeStr)
 	{
+		std::cout << typeStr << std::endl;
 	}
 };
 struct ColumnInfo
@@ -64,6 +65,7 @@ struct IndexInfo
 	IndexInfo(const std::string &indexStr)
 	{
 		this->str = indexStr;
+		std::cout << indexStr << std::endl;
 	}
 };
 struct PrimeKeyInfo
@@ -73,6 +75,7 @@ struct PrimeKeyInfo
 	PrimeKeyInfo(const std::string &primeKeyStr)
 	{
 		this->str = primeKeyStr;
+		std::cout << primeKeyStr << std::endl;
 	}
 };
 struct TableInfo
@@ -84,17 +87,38 @@ struct TableInfo
 	std::vector<PrimeKeyInfo> primeKeys;
 	TableInfo(std::ifstream &schemaInfo)
 	{
-		std::string tmp;
+		std::string tmp; //无用内容或空行
 		schemaInfo >> tmp >> this->fromDataBase >> tmp >> this->tableName;
 		int columnNums = 0;
 		schemaInfo >> tmp >> tmp >> columnNums;
+		std::getline(schemaInfo, tmp);
 		while (columnNums--)
 		{
 			std::string colStr;
 			std::getline(schemaInfo, colStr);
+			std::cout << colStr << std::endl;
 			rapidjson::Document doc;
 			doc.Parse(colStr.c_str());
 			columns.emplace_back(ColumnInfo(doc));
+		}
+		int indexNums = 0;
+		schemaInfo >> tmp >> tmp >> indexNums;
+		std::getline(schemaInfo, tmp);
+
+		while (indexNums--)
+		{
+			std::string colStr;
+			std::getline(schemaInfo, colStr);
+			indexs.emplace_back(IndexInfo(colStr));
+		}
+		int primeKeyNums = 0;
+		schemaInfo >> tmp >> tmp >> tmp >> primeKeyNums;
+		std::getline(schemaInfo, tmp);
+		while (primeKeyNums--)
+		{
+			std::string colStr;
+			std::getline(schemaInfo, colStr);
+			primeKeys.emplace_back(PrimeKeyInfo(colStr));
 		}
 	}
 };
@@ -104,6 +128,7 @@ class Demo
 public:
 	std::string sourceDirectory;
 	std::string sinkDirectory;
+	std::unordered_map<std::string, TableInfo> tables;
 
 public:
 	bool initialSchemaInfo()
@@ -116,6 +141,15 @@ public:
 		{
 			std::cout << "not found: schemaInfo" << std::endl;
 			return false;
+		}
+		while (!schemaInfo.eof())
+		{
+			TableInfo table(schemaInfo);
+			if (table.tableName == "")
+				break;
+			tables.insert({table.tableName, table});
+			std::cout << "read table:"
+					  << " " << table.tableName << " success." << std::endl;
 		}
 		return true;
 	}
