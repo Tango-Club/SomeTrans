@@ -34,7 +34,21 @@ struct ColumnDefType
 	std::vector<int> args;
 	ColumnDefType(const std::string &typeStr)
 	{
-		std::cout << typeStr << std::endl;
+		int pre = 0;
+		for (int i = 0; i < typeStr.length(); i++)
+		{
+			if (typeStr[i] == '(')
+				this->typeName = typeStr.substr(0, i), pre = i + 1;
+			else if (typeStr[i] == ',' || typeStr[i] == ')')
+			{
+				this->args.push_back(std::stoi(typeStr.substr(pre, i - pre)));
+				pre = i + 1;
+			}
+		}
+		std::cout << typeName << std::endl;
+		for (auto x : args)
+			std::cout << x << " ";
+		std::cout << std::endl;
 	}
 };
 struct ColumnInfo
