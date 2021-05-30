@@ -1,0 +1,165 @@
+[DATABASE] tianchi_dts_data [TABLE] item
+COLUMN NUMBER 5
+{"Name":"i_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"i_im_id","Ordinal":2,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"i_name","Ordinal":3,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"i_price","Ordinal":4,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(5,2)","Length":null,"Precision":5,"Scale":2}
+{"Name":"i_data","Ordinal":5,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(50)","Length":50,"Precision":null,"Scale":null}
+INDEX NUMBER 1
+{"IndexName":"PRIMARY","IndexCols":["i_id"],"Primary":true,"Unique":true}
+PRIMARY KEY NUMBER 1
+{"IndexName":"PRIMARY","IndexCols":["i_id"],"Primary":true,"Unique":true}
+[DATABASE] tianchi_dts_data [TABLE] district
+COLUMN NUMBER 11
+{"Name":"d_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"d_w_id","Ordinal":2,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"d_name","Ordinal":3,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(10)","Length":10,"Precision":null,"Scale":null}
+{"Name":"d_street_1","Ordinal":4,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"d_street_2","Ordinal":5,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"d_city","Ordinal":6,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"d_state","Ordinal":7,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(2)","Length":2,"Precision":null,"Scale":null}
+{"Name":"d_zip","Ordinal":8,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(9)","Length":9,"Precision":null,"Scale":null}
+{"Name":"d_tax","Ordinal":9,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(4,2)","Length":null,"Precision":4,"Scale":2}
+{"Name":"d_ytd","Ordinal":10,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(12,2)","Length":null,"Precision":12,"Scale":2}
+{"Name":"d_next_o_id","Ordinal":11,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+INDEX NUMBER 2
+{"IndexName":"PRIMARY","IndexCols":["d_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["d_id"],"Primary":true,"Unique":true}
+PRIMARY KEY NUMBER 2
+{"IndexName":"PRIMARY","IndexCols":["d_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["d_id"],"Primary":true,"Unique":true}
+[DATABASE] tianchi_dts_data [TABLE] order_line
+COLUMN NUMBER 10
+{"Name":"ol_o_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"ol_d_id","Ordinal":2,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"ol_w_id","Ordinal":3,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"ol_number","Ordinal":4,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"ol_i_id","Ordinal":5,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"ol_supply_w_id","Ordinal":6,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"ol_delivery_d","Ordinal":7,"Unsigned":false,"CharSet":null,"ColumnDef":"datetime","Length":null,"Precision":null,"Scale":null}
+{"Name":"ol_quantity","Ordinal":8,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"ol_amount","Ordinal":9,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(6,2)","Length":null,"Precision":6,"Scale":2}
+{"Name":"ol_dist_info","Ordinal":10,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+INDEX NUMBER 6
+{"IndexName":"PRIMARY","IndexCols":["ol_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["ol_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["ol_o_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["ol_number"],"Primary":true,"Unique":true}
+{"IndexName":"fkey_order_line_2","IndexCols":["ol_supply_w_id"],"Primary":false,"Unique":false}
+{"IndexName":"fkey_order_line_2","IndexCols":["ol_i_id"],"Primary":false,"Unique":false}
+PRIMARY KEY NUMBER 4
+{"IndexName":"PRIMARY","IndexCols":["ol_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["ol_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["ol_o_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["ol_number"],"Primary":true,"Unique":true}
+[DATABASE] tianchi_dts_data [TABLE] orders
+COLUMN NUMBER 8
+{"Name":"o_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"o_d_id","Ordinal":2,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"o_w_id","Ordinal":3,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"o_c_id","Ordinal":4,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"o_entry_d","Ordinal":5,"Unsigned":false,"CharSet":null,"ColumnDef":"datetime","Length":null,"Precision":null,"Scale":null}
+{"Name":"o_carrier_id","Ordinal":6,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"o_ol_cnt","Ordinal":7,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"o_all_local","Ordinal":8,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+INDEX NUMBER 7
+{"IndexName":"PRIMARY","IndexCols":["o_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["o_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["o_id"],"Primary":true,"Unique":true}
+{"IndexName":"idx_orders","IndexCols":["o_w_id"],"Primary":false,"Unique":false}
+{"IndexName":"idx_orders","IndexCols":["o_d_id"],"Primary":false,"Unique":false}
+{"IndexName":"idx_orders","IndexCols":["o_c_id"],"Primary":false,"Unique":false}
+{"IndexName":"idx_orders","IndexCols":["o_id"],"Primary":false,"Unique":false}
+PRIMARY KEY NUMBER 3
+{"IndexName":"PRIMARY","IndexCols":["o_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["o_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["o_id"],"Primary":true,"Unique":true}
+[DATABASE] tianchi_dts_data [TABLE] stock
+COLUMN NUMBER 17
+{"Name":"s_i_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"s_w_id","Ordinal":2,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"s_quantity","Ordinal":3,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"s_dist_01","Ordinal":4,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_02","Ordinal":5,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_03","Ordinal":6,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_04","Ordinal":7,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_05","Ordinal":8,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_06","Ordinal":9,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_07","Ordinal":10,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_08","Ordinal":11,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_09","Ordinal":12,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_dist_10","Ordinal":13,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(24)","Length":24,"Precision":null,"Scale":null}
+{"Name":"s_ytd","Ordinal":14,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(8,0)","Length":null,"Precision":8,"Scale":0}
+{"Name":"s_order_cnt","Ordinal":15,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"s_remote_cnt","Ordinal":16,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"s_data","Ordinal":17,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(50)","Length":50,"Precision":null,"Scale":null}
+INDEX NUMBER 3
+{"IndexName":"PRIMARY","IndexCols":["s_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["s_i_id"],"Primary":true,"Unique":true}
+{"IndexName":"fkey_stock_2","IndexCols":["s_i_id"],"Primary":false,"Unique":false}
+PRIMARY KEY NUMBER 2
+{"IndexName":"PRIMARY","IndexCols":["s_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["s_i_id"],"Primary":true,"Unique":true}
+[DATABASE] tianchi_dts_data [TABLE] warehouse
+COLUMN NUMBER 9
+{"Name":"w_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"w_name","Ordinal":2,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(10)","Length":10,"Precision":null,"Scale":null}
+{"Name":"w_street_1","Ordinal":3,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"w_street_2","Ordinal":4,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"w_city","Ordinal":5,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"w_state","Ordinal":6,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(2)","Length":2,"Precision":null,"Scale":null}
+{"Name":"w_zip","Ordinal":7,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(9)","Length":9,"Precision":null,"Scale":null}
+{"Name":"w_tax","Ordinal":8,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(4,2)","Length":null,"Precision":4,"Scale":2}
+{"Name":"w_ytd","Ordinal":9,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(12,2)","Length":null,"Precision":12,"Scale":2}
+INDEX NUMBER 1
+{"IndexName":"PRIMARY","IndexCols":["w_id"],"Primary":true,"Unique":true}
+PRIMARY KEY NUMBER 1
+{"IndexName":"PRIMARY","IndexCols":["w_id"],"Primary":true,"Unique":true}
+[DATABASE] tianchi_dts_data [TABLE] new_orders
+COLUMN NUMBER 3
+{"Name":"no_o_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"no_d_id","Ordinal":2,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"no_w_id","Ordinal":3,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+INDEX NUMBER 3
+{"IndexName":"PRIMARY","IndexCols":["no_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["no_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["no_o_id"],"Primary":true,"Unique":true}
+PRIMARY KEY NUMBER 3
+{"IndexName":"PRIMARY","IndexCols":["no_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["no_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["no_o_id"],"Primary":true,"Unique":true}
+[DATABASE] tianchi_dts_data [TABLE] customer
+COLUMN NUMBER 21
+{"Name":"c_id","Ordinal":1,"Unsigned":false,"CharSet":null,"ColumnDef":"int(11)","Length":null,"Precision":10,"Scale":0}
+{"Name":"c_d_id","Ordinal":2,"Unsigned":false,"CharSet":null,"ColumnDef":"tinyint(4)","Length":null,"Precision":3,"Scale":0}
+{"Name":"c_w_id","Ordinal":3,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"c_first","Ordinal":4,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(16)","Length":16,"Precision":null,"Scale":null}
+{"Name":"c_middle","Ordinal":5,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(2)","Length":2,"Precision":null,"Scale":null}
+{"Name":"c_last","Ordinal":6,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(16)","Length":16,"Precision":null,"Scale":null}
+{"Name":"c_street_1","Ordinal":7,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"c_street_2","Ordinal":8,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"c_city","Ordinal":9,"Unsigned":false,"CharSet":"latin1","ColumnDef":"varchar(20)","Length":20,"Precision":null,"Scale":null}
+{"Name":"c_state","Ordinal":10,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(2)","Length":2,"Precision":null,"Scale":null}
+{"Name":"c_zip","Ordinal":11,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(9)","Length":9,"Precision":null,"Scale":null}
+{"Name":"c_phone","Ordinal":12,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(16)","Length":16,"Precision":null,"Scale":null}
+{"Name":"c_since","Ordinal":13,"Unsigned":false,"CharSet":null,"ColumnDef":"datetime","Length":null,"Precision":null,"Scale":null}
+{"Name":"c_credit","Ordinal":14,"Unsigned":false,"CharSet":"latin1","ColumnDef":"char(2)","Length":2,"Precision":null,"Scale":null}
+{"Name":"c_credit_lim","Ordinal":15,"Unsigned":false,"CharSet":null,"ColumnDef":"bigint(20)","Length":null,"Precision":19,"Scale":0}
+{"Name":"c_discount","Ordinal":16,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(4,2)","Length":null,"Precision":4,"Scale":2}
+{"Name":"c_balance","Ordinal":17,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(12,2)","Length":null,"Precision":12,"Scale":2}
+{"Name":"c_ytd_payment","Ordinal":18,"Unsigned":false,"CharSet":null,"ColumnDef":"decimal(12,2)","Length":null,"Precision":12,"Scale":2}
+{"Name":"c_payment_cnt","Ordinal":19,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"c_delivery_cnt","Ordinal":20,"Unsigned":false,"CharSet":null,"ColumnDef":"smallint(6)","Length":null,"Precision":5,"Scale":0}
+{"Name":"c_data","Ordinal":21,"Unsigned":false,"CharSet":"latin1","ColumnDef":"text","Length":65535,"Precision":null,"Scale":null}
+INDEX NUMBER 7
+{"IndexName":"PRIMARY","IndexCols":["c_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["c_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["c_id"],"Primary":true,"Unique":true}
+{"IndexName":"idx_customer","IndexCols":["c_w_id"],"Primary":false,"Unique":false}
+{"IndexName":"idx_customer","IndexCols":["c_d_id"],"Primary":false,"Unique":false}
+{"IndexName":"idx_customer","IndexCols":["c_last"],"Primary":false,"Unique":false}
+{"IndexName":"idx_customer","IndexCols":["c_first"],"Primary":false,"Unique":false}
+PRIMARY KEY NUMBER 3
+{"IndexName":"PRIMARY","IndexCols":["c_w_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["c_d_id"],"Primary":true,"Unique":true}
+{"IndexName":"PRIMARY","IndexCols":["c_id"],"Primary":true,"Unique":true}
