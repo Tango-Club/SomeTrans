@@ -371,17 +371,33 @@ struct IndexInfo
 	IndexInfo(const std::string &indexStr)
 	{
 		this->str = indexStr;
-		std::cout << indexStr << std::endl;
 	}
 };
 struct PrimeKeyInfo
 { //主键声明
 	//临时
 	std::string indexCol;
-	PrimeKeyInfo(const rapidjson::Document &doc)
+	int index;
+	PrimeKeyInfo(const rapidjson::Document &doc, const std::vector<ColumnInfo> &columns)
 	{
 		this->indexCol = doc["IndexCols"].GetArray()[0].GetString();
-		std::cout << this->indexCol << std::endl;
+		for (int i = 0; i < columns.size(); i++)
+			if (columns[i].name == this->indexCol)
+				index = i;
+	}
+};
+struct RowDataCmp
+{
+	const std::vector<PrimeKeyInfo> &primeKeys;
+	RowDataCmp(const std::vector<PrimeKeyInfo> &keys) : primeKeys(keys) {}
+	bool operator()(const RowData &lhs, const RowData &rhs)
+	{
+		for (auto &primeKey : this->primeKeys)
+		{
+			if (lhs.RowValue[primeKey.index] != rhs.RowValue[primeKey.index])
+				return lhs.RowValue[primeKey.index] < rhs.RowValue[primeKey.index];
+		}
+		return 0;
 	}
 };
 struct TableInfo
@@ -427,7 +443,7 @@ struct TableInfo
 			std::getline(schemaInfo, colStr);
 			rapidjson::Document doc;
 			doc.Parse(colStr.c_str());
-			primeKeys.emplace_back(PrimeKeyInfo(doc));
+			primeKeys.emplace_back(PrimeKeyInfo(doc, columns));
 		}
 	}
 	void readRow(std::ifstream &dataSource)
@@ -439,8 +455,13 @@ struct TableInfo
 		}
 		this->datas.push_back(rowData);
 	}
+	void sortDatas()
+	{
+		std::sort(datas.begin(), datas.end(), RowDataCmp(primeKeys));
+	}
 	void sink(std::string path)
 	{
+		this->sortDatas();
 		if (access(path.c_str(), 0) == -1)
 			mkdir(path.c_str());
 		path += "/tianchi_dts_sink_data_" + this->tableName;
@@ -454,7 +475,7 @@ struct TableInfo
 				if (f)
 					f = 0;
 				else
-					dataSink << " ";
+					dataSink << "	";
 				if (auto pval = std::get_if<int>(&value))
 					dataSink << *pval;
 				else if (auto pval = std::get_if<std::string>(&value))
