@@ -1,4 +1,3 @@
-#include <direct.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +10,7 @@
 #include <variant>
 #include <vector>
 
+#include "direct.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
