@@ -85,11 +85,11 @@ struct IndexInfo
 struct PrimeKeyInfo
 { //主键声明
 	//临时
-	std::string str;
-	PrimeKeyInfo(const std::string &primeKeyStr)
+	std::string indexCol;
+	PrimeKeyInfo(const rapidjson::Document &doc)
 	{
-		this->str = primeKeyStr;
-		std::cout << primeKeyStr << std::endl;
+		this->indexCol = doc["IndexCols"].GetArray()[0].GetString();
+		std::cout << this->indexCol << std::endl;
 	}
 };
 struct TableInfo
@@ -132,7 +132,9 @@ struct TableInfo
 		{
 			std::string colStr;
 			std::getline(schemaInfo, colStr);
-			primeKeys.emplace_back(PrimeKeyInfo(colStr));
+			rapidjson::Document doc;
+			doc.Parse(colStr.c_str());
+			primeKeys.emplace_back(PrimeKeyInfo(doc));
 		}
 	}
 };
