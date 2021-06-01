@@ -13,7 +13,7 @@ echo "echo4: $4"
 
 APP_HOME=main.cpp
 OUT_NAME=main
-g++ $APP_HOME -std=c++11 -o $OUT_NAME
+g++ $APP_HOME -std=c++17 -o $OUT_NAME
 
 #(函数)启动程序
 echo "start $0 $1 $2 $3 $4"

@@ -1,4 +1,6 @@
+#include <direct.h>
 #include <getopt.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include <fstream>
@@ -6,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <variant>
 #include <vector>
 
 #include "rapidjson/document.h"
@@ -57,7 +60,6 @@ public:
 		}
 		return true;
 	}
-
 	bool loadSourceData(int dataNumber)
 	{
 		std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
@@ -69,6 +71,31 @@ public:
 			std::cout << "not found: sourceData " + std::to_string(dataNumber) << std::endl;
 			return false;
 		}
+		int p = 1;
+		while (!sourceData.eof())
+		{
+			std::string op;
+			sourceData >> op;
+			if (op == "")
+				break;
+			if (op == "I")
+			{
+				std::string dataBase;
+				std::string tableName;
+				sourceData >> dataBase >> tableName;
+				if (!tables.count(tableName))
+				{
+					std::cout << "table: " + tableName + " not found" << std::endl;
+				}
+				tables.at(tableName).readRow(sourceData);
+				std::cout << p++ << "-"
+						  << "table: " + tableName + " found" << std::endl;
+			}
+			else
+			{
+				assert(0);
+			}
+		}
 		return true;
 	}
 
@@ -78,11 +105,15 @@ public:
 		return;
 	}
 
-	void sinkData(std::string path)
+	void sinkData()
 	{
 		std::cout << "Sink the data." << std::endl;
+		std::string path = sinkDirectory + "//" + SINK_FILE_DIR;
 		std::cout << "path: " << path << std::endl;
-		std::cout << "sinkDirectory: " << sinkDirectory << std::endl;
+		for (auto table : tables)
+		{
+			table.second.sink(path);
+		}
 		return;
 	}
 };
@@ -153,7 +184,7 @@ int main(int argc, char *argv[])
 
 	// sink to target file
 	std::cout << "[Start]\tsink to target file." << std::endl;
-	demo->sinkData(SINK_FILE_DIR);
+	demo->sinkData();
 	std::cout << "[End]\tsink to target file." << std::endl;
 
 	return 0;
