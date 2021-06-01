@@ -41,7 +41,7 @@ public:
 	bool initialSchemaInfo()
 	{
 		std::cout << "Read schema_info_dir/schema.info file and construct table in memory." << std::endl;
-		std::string path = sourceDirectory + "//" + SCHEMA_FILE_DIR + "//" + SCHEMA_FILE_NAME;
+		std::string path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
 		std::cout << "path: " << path << std::endl;
 		std::ifstream schemaInfo(path);
 		if (!schemaInfo.is_open())
@@ -63,7 +63,7 @@ public:
 	bool loadSourceData(int dataNumber)
 	{
 		std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
-		std::string path = sourceDirectory + "//" + SOURCE_FILE_DIR + "//" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
+		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
 		std::cout << "path: " << path << std::endl;
 		std::ifstream sourceData(path);
 		if (!sourceData.is_open())
@@ -108,7 +108,7 @@ public:
 	void sinkData()
 	{
 		std::cout << "Sink the data." << std::endl;
-		std::string path = sinkDirectory + "//" + SINK_FILE_DIR;
+		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
 		std::cout << "path: " << path << std::endl;
 		for (auto table : tables)
 		{

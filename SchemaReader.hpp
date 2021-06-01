@@ -443,7 +443,7 @@ struct TableInfo
 	{
 		if (access(path.c_str(), 0) == -1)
 			mkdir(path.c_str());
-		path += "//tianchi_dts_sink_data_" + this->tableName;
+		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
 		std::ofstream dataSink(path);
 		for (auto row : datas)
