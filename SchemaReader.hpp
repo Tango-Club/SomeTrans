@@ -1,4 +1,3 @@
-#include <string>
 /*
 表定义类
 */
