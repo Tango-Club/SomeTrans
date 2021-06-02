@@ -76,7 +76,7 @@ struct ColumnDefType
 	{
 		std::string typeName;
 		int pre = 0;
-		for (int i = 0; i < typeStr.length(); i++)
+		for (size_t i = 0; i < typeStr.length(); i++)
 		{
 			if (typeStr[i] == '(')
 				typeName = typeStr.substr(0, i), pre = i + 1;
@@ -88,6 +88,7 @@ struct ColumnDefType
 		}
 		if (pre == 0)
 			typeName = typeStr;
+		//assert(TypeMP.count(typeName) != 0);
 		this->type = TypeMP.at(typeName);
 	}
 };
@@ -132,7 +133,7 @@ struct ColumnInfo
 	bool isUnsigned;
 	std::string charSet;
 	ColumnDefType columnDef;
-	int length;
+	size_t length;
 	int precision;
 	int scale;
 	ColumnInfo(const rapidjson::Document &doc) : columnDef(doc["ColumnDef"].GetString())
@@ -141,7 +142,7 @@ struct ColumnInfo
 		this->ordinal = doc["Ordinal"].GetInt();
 		this->isUnsigned = doc["Unsigned"].GetBool();
 		this->charSet = (doc["CharSet"].IsNull() ? "null" : doc["CharSet"].GetString());
-		this->length = (doc["Length"].IsNull() ? -1 : doc["Length"].GetInt());
+		this->length = (doc["Length"].IsNull() ? 0 : doc["Length"].GetInt());
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
@@ -290,7 +291,7 @@ struct ColumnInfo
 					return x;
 				}
 			}
-			catch (const std::exception &e)
+			catch (const std::exception &)
 			{
 			}
 			return 0;
@@ -309,7 +310,7 @@ struct ColumnInfo
 					float ret = std::stof(data);
 					return ret;
 				}
-				catch (std::exception)
+				catch (const std::exception &)
 				{
 				}
 			}
@@ -327,7 +328,7 @@ struct ColumnInfo
 					double ret = std::stod(data);
 					return ret;
 				}
-				catch (std::exception)
+				catch (const std::exception &)
 				{
 				}
 			}
@@ -344,7 +345,7 @@ struct ColumnInfo
 					double ret = std::stod(data);
 					return ret;
 				}
-				catch (std::exception e)
+				catch (const std::exception &)
 				{
 				}
 			}
@@ -515,13 +516,12 @@ struct IndexInfo
 };
 struct PrimeKeyInfo
 { //主键声明
-	//临时
 	std::string indexCol;
 	int index;
 	PrimeKeyInfo(const rapidjson::Document &doc, const std::vector<ColumnInfo> &columns)
 	{
 		this->indexCol = doc["IndexCols"].GetArray()[0].GetString();
-		for (int i = 0; i < columns.size(); i++)
+		for (size_t i = 0; i < columns.size(); i++)
 			if (columns[i].name == this->indexCol)
 				index = i;
 	}
@@ -575,7 +575,7 @@ struct TableInfo
 			std::getline(schemaInfo, colStr);
 			rapidjson::Document doc;
 			doc.Parse(colStr.c_str());
-			columns.emplace_back(ColumnInfo(doc));
+			columns.push_back(ColumnInfo(doc));
 		}
 		int indexNums = 0;
 		schemaInfo >> tmp >> tmp >> indexNums;
@@ -585,7 +585,7 @@ struct TableInfo
 		{
 			std::string colStr;
 			std::getline(schemaInfo, colStr);
-			indexs.emplace_back(IndexInfo(colStr));
+			indexs.push_back(IndexInfo(colStr));
 		}
 		int primeKeyNums = 0;
 		schemaInfo >> tmp >> tmp >> tmp >> primeKeyNums;
@@ -596,7 +596,7 @@ struct TableInfo
 			std::getline(schemaInfo, colStr);
 			rapidjson::Document doc;
 			doc.Parse(colStr.c_str());
-			primeKeys.emplace_back(PrimeKeyInfo(doc, columns));
+			primeKeys.push_back(PrimeKeyInfo(doc, columns));
 		}
 	}
 	void readRow(std::ifstream &dataSource)
@@ -608,7 +608,7 @@ struct TableInfo
 		std::vector<std::string> vecStr(
 			std::sregex_token_iterator(rowStr.begin(), rowStr.end(), tabRe, -1),
 			std::sregex_token_iterator());
-		for (int i = 0; i < columns.size(); i++)
+		for (size_t i = 0; i < columns.size(); i++)
 		{
 			rowData.RowValue.push_back(columns[i].readCol(vecStr[i + 1]));
 		}
@@ -619,22 +619,22 @@ struct TableInfo
 		std::sort(datas.begin(), datas.end(), RowDataCmp(primeKeys));
 		datas.erase(unique(datas.begin(), datas.end(), RowDataEqual(primeKeys)), datas.end());
 	}
-	void sink(std::string path)
+	void sink(const std::string &path)
 	{
 		this->sortDatas();
-		DIR *mydir = NULL;
-		if ((mydir = opendir(path.c_str())) == NULL) //判断目录
+		DIR *mydir = nullptr;
+		if ((mydir = opendir(path.c_str())) == nullptr) //判断目录
 		{
-			int ret = MKDIR(path.c_str()); //创建目录
+			MKDIR(path.c_str()); //创建目录
 		}
 		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
 		std::ofstream dataSink(path);
-		int rNums = 0;
+		size_t rNums = 0;
 		for (auto &row : datas)
 		{
 			bool f = 1;
-			int cNums = 0;
+			size_t cNums = 0;
 			for (auto &value : row.RowValue)
 			{
 				if (f)
@@ -650,7 +650,6 @@ struct TableInfo
 					if (this->columns[cNums].columnDef.type == ValueType::Vdecimal)
 					{
 						double p = *pval;
-						bool sign = 0;
 						if (p < 0)
 						{
 							p = -p;

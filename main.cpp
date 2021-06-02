@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -60,11 +61,10 @@ public:
 			std::cout << "not found: schemaInfo" << std::endl;
 			return false;
 		}
-		while (!schemaInfo.eof())
+		while (schemaInfo.peek() != EOF)
 		{
 			TableInfo table(schemaInfo);
-			if (table.tableName == "")
-				break;
+			assert(table.tableName != "");
 			tables.insert({table.tableName, table});
 			std::cout << "read table:"
 					  << " " << table.tableName << " success." << std::endl;
@@ -83,10 +83,11 @@ public:
 		if (!sourceData.is_open())
 		{
 			std::cout << "not found: sourceData " + std::to_string(dataNumber) << std::endl;
+			sourceData.close();
 			return false;
 		}
 		int p = 1;
-		while (!sourceData.eof())
+		while (sourceData.peek() != EOF)
 		{
 			std::string op;
 			sourceData >> op;
@@ -112,7 +113,6 @@ public:
 		}
 		time_t endTime = getTime();
 		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
-
 		return true;
 	}
 
@@ -128,7 +128,7 @@ public:
 		std::cout << "Sink the data." << std::endl;
 		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
 		std::cout << "path: " << path << std::endl;
-		for (auto table : tables)
+		for (auto &table : tables)
 		{
 			table.second.sink(path);
 		}
@@ -159,9 +159,7 @@ Output:
 int main(int argc, char *argv[])
 {
 	time_t startTime = getTime();
-	std::ios::sync_with_stdio(false);
-
-	Demo *demo = new Demo();
+	std::shared_ptr<Demo> demo(new Demo());
 
 	static struct option long_options[] = {
 		{"input_dir", required_argument, 0, 'i'},
@@ -199,10 +197,12 @@ int main(int argc, char *argv[])
 		dataNumber++;
 	std::cout << "[End]\tload input Start file." << std::endl;
 
+	/*
 	// data clean.
 	std::cout << "[Start]\tdata clean." << std::endl;
 	demo->cleanData();
 	std::cout << "[End]\tdata clean." << std::endl;
+	*/
 
 	// sink to target file
 	std::cout << "[Start]\tsink to target file." << std::endl;
