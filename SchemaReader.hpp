@@ -1,6 +1,6 @@
 #ifdef _WIN32
 #define MKDIR(a) mkdir((a))
-#elif _LINUX
+#else
 #define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
 #endif
 
@@ -94,7 +94,7 @@ struct ColumnDefType
 bool isInteger(const std::string &s)
 {
 	int cnt = 0;
-	for (auto i : s)
+	for (auto &i : s)
 	{
 		if (cnt++ == 0)
 			if (i == '-' || i == '+')
@@ -108,7 +108,7 @@ bool isDecimal(const std::string &s)
 {
 	int cnt = 0;
 	int cnt1 = 0;
-	for (auto i : s)
+	for (auto &i : s)
 	{
 		if (cnt++ == 0)
 			if (i == '-' || i == '+')
@@ -116,8 +116,9 @@ bool isDecimal(const std::string &s)
 		if (i == '.')
 		{
 			cnt1++;
-			if (cnt1 != 1)
+			if (cnt == 1 || cnt1 != 1)
 				return false;
+			continue;
 		}
 		if (!isdigit(i))
 			return false;
@@ -144,7 +145,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string, float, double> readCol(std::string data)
+	std::variant<int, long long, unsigned long long, std::string, float, double> readCol(const std::string &data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -336,7 +337,21 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			return data;
+			if (isDecimal(data))
+			{
+				try
+				{
+					double ret = std::stod(data);
+					return ret;
+				}
+				catch (std::exception e)
+				{
+					std::cout << e.what() << std::endl;
+				}
+			}
+			std::cout << data << std::endl;
+			assert(0);
+			return 0.0;
 		}
 		//浮点型 超长浮点数精度
 		if (this->columnDef.type == ValueType::Vdate)
@@ -380,7 +395,15 @@ struct ColumnInfo
 			if (std::regex_match(data, result, pattern))
 				return data;
 			*/
-			return "2020-04-01 00:00:00.0";
+			for (char &c : data)
+			{
+				if (c <= '9' && c >= '0')
+					continue;
+				if (c == ' ' || c == '-' || c == ':' || c == '.')
+					continue;
+				return "2020-04-01 00:00:00.0";
+			}
+			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtimestamp)
 		{
@@ -570,6 +593,7 @@ struct TableInfo
 		RowData rowData;
 		std::string rowStr;
 		std::getline(dataSource, rowStr);
+		std::cout<<rowStr<<std::endl;
 		std::regex tabRe("	");
 		std::vector<std::string> vecStr(
 			std::sregex_token_iterator(rowStr.begin(), rowStr.end(), tabRe, -1),
@@ -610,7 +634,16 @@ struct TableInfo
 				else if (auto pval = std::get_if<int>(&value))
 					dataSink << *pval;
 				else if (auto pval = std::get_if<double>(&value))
-					dataSink << *pval;
+				{
+					if (this->columns[rNums].columnDef.type == ValueType::Vdecimal)
+					{
+						dataSink << "d" << std::setiosflags(std::ios::fixed)
+								 << std::setprecision(this->columns[rNums].columnDef.args[1]) << *pval;
+						dataSink.unsetf(std::ios::adjustfield | std::ios::basefield | std::ios::floatfield);
+					}
+					else
+						dataSink << *pval;
+				}
 				else if (auto pval = std::get_if<float>(&value))
 					dataSink << *pval;
 				else if (auto pval = std::get_if<long long>(&value))
