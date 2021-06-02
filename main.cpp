@@ -11,8 +11,10 @@
 #include <unordered_set>
 #include <variant>
 #include <vector>
+#include<regex>
 
-#include "direct.h"
+
+//#include "direct.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -141,6 +143,7 @@ Output:
 **/
 int main(int argc, char *argv[])
 {
+    std::cout<<argv[3]<<std::endl;
 	Demo *demo = new Demo();
 
 	static struct option long_options[] = {

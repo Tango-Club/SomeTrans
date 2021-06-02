@@ -60,7 +60,7 @@ const std::unordered_map<std::string, ValueType> TypeMP{
 	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
-	std::vector<std::variant<int, long long, std::string>> RowValue;
+	std::vector<std::variant<int, long long, std::string,float,double>> RowValue;
 };
 struct ColumnDefType
 { //数据类型
@@ -85,6 +85,32 @@ struct ColumnDefType
 		this->type = TypeMP.at(typeName);
 	}
 };
+bool isinteger(std::string s)
+{
+    int cnt=0;
+    for(auto i:s)
+    {
+        if(cnt++==0)if(i=='-' ||i=='+')continue;
+        if(!isdigit(i))return false;
+    }
+    return true;
+}
+bool isdecimal(std::string s)
+{
+    int cnt=0;
+    int cnt1=0;
+    for(auto i:s)
+    {
+        if(cnt++==0)if(i=='-' ||i=='+')continue;
+        if(i=='.')
+        {
+            cnt1++;
+            if(cnt1!=1)return false;
+        }
+        if(!isdigit(i))return false;
+    }
+    return true;
+}
 struct ColumnInfo
 { //列声明
 	std::string name;
@@ -105,7 +131,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, std::string> readCol(std::string data)
+	std::variant<int, long long, std::string,float,double> readCol(std::ifstream &dataSource)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -114,7 +140,19 @@ struct ColumnInfo
 			Signed [-128,127]
 			Unsigned [0,255]
 			*/
-			return data;
+			std::string data;
+            if(isinteger(data))
+            {
+                try
+                {
+                    int ret=std::stoi(data);
+                    if(ret<=127&&ret>=-128)
+                        return ret;
+
+                }
+                catch (std::exception){}
+            }
+			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vsmallint)
 		{
@@ -123,7 +161,19 @@ struct ColumnInfo
 			Signed [-32768,32767]
 			Unsigned [0,65535]
 			*/
-			return data;
+            std::string data;
+            if(isinteger(data))
+            {
+                try
+                {
+                    int ret=std::stoi(data);
+                    if(ret<=32767&&ret>=-32768)
+                        return ret;
+
+                }
+                catch (std::exception){}
+            }
+            return 0;
 		}
 		if (this->columnDef.type == ValueType::Vmediumint)
 		{
@@ -133,7 +183,19 @@ struct ColumnInfo
 			Signed [-8388608,8388607]
 			Unsigned [0,16777215]
 			*/
-			return data;
+            std::string data;
+            if(isinteger(data))
+            {
+                try
+                {
+                    int ret=std::stoi(data);
+                    if(ret<=8388607&&ret>=-8388608)
+                        return ret;
+
+                }
+                catch (std::exception){}
+            }
+            return 0;
 		}
 		if (this->columnDef.type == ValueType::Vint)
 		{
@@ -142,8 +204,20 @@ struct ColumnInfo
 			Signed [-2147483648,2147483647]
 			Unsigned [0,4294967295]
 			*/
-			return data;
-		}
+            std::string data;
+            if(isinteger(data))
+            {
+                try
+                {
+                    int ret=std::stoi(data);
+                    return ret;
+
+                }
+                catch (std::exception){}
+            }
+            return 0;
+
+        }
 		if (this->columnDef.type == ValueType::Vbigint)
 		{
 			/*
@@ -151,7 +225,18 @@ struct ColumnInfo
 			Signed [-9223372036854775808,9223372036854775807]
 			Unsigned [0,18446744073709551615]
 			*/
-			return data;
+            std::string data;
+            if(isinteger(data))
+            {
+                try
+                {
+                    long long ret=std::stoll(data);
+                    return ret;
+
+                }
+                catch (std::exception){}
+            }
+            return 0;
 		}
 		//整型 非法整数数值
 		if (this->columnDef.type == ValueType::Vfloat)
@@ -159,19 +244,43 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			return data;
+            std::string data;
+            if(isdecimal(data))
+            {
+                try
+                {
+                    float ret=std::stof(data);
+                    return ret;
+
+                }
+                catch (std::exception){}
+            }
+            return 0;
 		}
 		if (this->columnDef.type == ValueType::Vdouble)
 		{
 			/*
 			not appeared
 			*/
-			return data;
+            std::string data;
+            if(isdecimal(data))
+            {
+                try
+                {
+                    double ret=std::stod(data);
+                    return ret;
+
+                }
+                catch (std::exception){}
+            }
+            return 0;
 		}
 		if (this->columnDef.type == ValueType::Vdecimal)
 		{
 			/*
 			*/
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		//浮点型 超长浮点数精度
@@ -182,6 +291,8 @@ struct ColumnInfo
 			 YYYY-MM-DD 
 			 1000-01-01 
 			*/
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtime)
@@ -191,6 +302,8 @@ struct ColumnInfo
 			 HH:MM:SS 
 			-838:59:59
 			*/
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vyear)
@@ -200,6 +313,8 @@ struct ColumnInfo
 			 YYYY 
 			 1901 
 			*/
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vdatetime)
@@ -209,7 +324,34 @@ struct ColumnInfo
 			 1000-01-01 00:00:00.0
 			 21位
 			*/
-			return data;
+			std::string data;
+			char c = ' ';
+			while (c == 9 || c == ' ')
+			{
+				dataSource.get(c);
+			}
+			data += c;
+			for (int i = 1; i <= 3; i++)
+			{
+				dataSource.get(c);
+				data += c;
+			}
+			if (data != "null")
+			{
+				for (int i = 1; i <= 17; i++)
+				{
+					dataSource.get(c);
+					data += c;
+				}
+			}
+            std::string regex_template("\\d{4}[-]\\d{2}[-]\\d{2}[ ]\\d{2}[:]\\d{2}[:]\\d{2}[.]\\d{1,3}");
+            std::regex pattern(regex_template,std::regex::icase);
+            std::match_results<std::string::const_iterator> result;
+
+            if(std::regex_match(data,result,pattern)){
+                return data;
+            }
+			return "2020-04-01 00:00:00.0";
 		}
 		if (this->columnDef.type == ValueType::Vtimestamp)
 		{
@@ -218,6 +360,8 @@ struct ColumnInfo
 			 YYYY-MM-DD HH:MM:SS
 			 19700101080001
 			*/
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		//时间 非法时间数据
@@ -225,6 +369,8 @@ struct ColumnInfo
 		{
 			/*
 			*/
+			std::string data;
+			dataSource >> data;
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
@@ -233,6 +379,8 @@ struct ColumnInfo
 		{
 			/*
 			*/
+			std::string data;
+			dataSource >> data;
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
@@ -242,8 +390,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtinytext)
@@ -251,8 +399,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vblob)
@@ -260,14 +408,16 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtext)
 		{
 			/*
 			*/
+			std::string data;
+			dataSource >> data;
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
@@ -277,8 +427,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vmediumtext)
@@ -286,8 +436,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vlongblob)
@@ -295,8 +445,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vlongtext)
@@ -304,8 +454,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			std::string data;
+			dataSource >> data;
 			return data;
 		}
 		//文本 超长字符长度
@@ -320,33 +470,17 @@ struct IndexInfo
 	IndexInfo(const std::string &indexStr)
 	{
 		this->str = indexStr;
+		std::cout << indexStr << std::endl;
 	}
 };
 struct PrimeKeyInfo
 { //主键声明
 	//临时
 	std::string indexCol;
-	int index;
-	PrimeKeyInfo(const rapidjson::Document &doc, const std::vector<ColumnInfo> &columns)
+	PrimeKeyInfo(const rapidjson::Document &doc)
 	{
 		this->indexCol = doc["IndexCols"].GetArray()[0].GetString();
-		for (int i = 0; i < columns.size(); i++)
-			if (columns[i].name == this->indexCol)
-				index = i;
-	}
-};
-struct RowDataCmp
-{
-	const std::vector<PrimeKeyInfo> &primeKeys;
-	RowDataCmp(const std::vector<PrimeKeyInfo> &keys) : primeKeys(keys) {}
-	bool operator()(const RowData &lhs, const RowData &rhs)
-	{
-		for (auto &primeKey : this->primeKeys)
-		{
-			if (lhs.RowValue[primeKey.index] != rhs.RowValue[primeKey.index])
-				return lhs.RowValue[primeKey.index] < rhs.RowValue[primeKey.index];
-		}
-		return 0;
+		std::cout << this->indexCol << std::endl;
 	}
 };
 struct TableInfo
@@ -392,46 +526,32 @@ struct TableInfo
 			std::getline(schemaInfo, colStr);
 			rapidjson::Document doc;
 			doc.Parse(colStr.c_str());
-			primeKeys.emplace_back(PrimeKeyInfo(doc, columns));
+			primeKeys.emplace_back(PrimeKeyInfo(doc));
 		}
 	}
 	void readRow(std::ifstream &dataSource)
 	{
 		RowData rowData;
-		std::string rowStr;
-		std::getline(dataSource, rowStr);
-		std::regex tabRe("	");
-		std::vector<std::string> vecStr(
-			std::sregex_token_iterator(rowStr.begin(), rowStr.end(), tabRe, -1),
-			std::sregex_token_iterator());
-		for (int i = 0; i < columns.size(); i++)
+		for (auto col : columns)
 		{
-			rowData.RowValue.push_back(columns[i].readCol(vecStr[i + 1]));
+			rowData.RowValue.push_back(col.readCol(dataSource));
 		}
 		this->datas.push_back(rowData);
 	}
-	void sortDatas()
-	{
-		std::sort(datas.begin(), datas.end(), RowDataCmp(primeKeys));
-	}
 	void sink(std::string path)
 	{
-		this->sortDatas();
-		if (access(path.c_str(), 0) == -1)
-			mkdir(path.c_str());
-		path += "/tianchi_dts_sink_data_" + this->tableName;
+		path += "//" + this->tableName;
 		remove(path.c_str());
 		std::ofstream dataSink(path);
-		int rNums = 0;
-		for (auto &row : datas)
+		for (auto row : datas)
 		{
 			bool f = 1;
-			for (auto &value : row.RowValue)
+			for (auto value : row.RowValue)
 			{
 				if (f)
 					f = 0;
 				else
-					dataSink << "	";
+					dataSink << " ";
 				if (auto pval = std::get_if<int>(&value))
 					dataSink << *pval;
 				else if (auto pval = std::get_if<std::string>(&value))
@@ -439,9 +559,7 @@ struct TableInfo
 				else
 					assert(0);
 			}
-			rNums++;
-			if (rNums != datas.size())
-				dataSink << std::endl;
+			dataSink << std::endl;
 		}
 	}
 };
