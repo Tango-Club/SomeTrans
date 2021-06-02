@@ -1,6 +1,6 @@
 #ifdef _WIN32
 #define MKDIR(a) mkdir((a))
-#elif _LINUX
+#else
 #define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
 #endif
 
@@ -119,7 +119,7 @@ bool isDecimal(const std::string &s)
 			if (cnt1 != 1)
 				return false;
 		}
-		if (!isdigit(i))
+		else if (!isdigit(i))
 			return false;
 	}
 	return true;
