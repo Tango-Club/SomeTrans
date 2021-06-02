@@ -60,7 +60,7 @@ const std::unordered_map<std::string, ValueType> TypeMP{
 	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
-	std::vector<std::variant<int, long long, unsigned long long, std::string>> RowValue;
+	std::vector<std::variant<int, long long, unsigned long long, std::string, float, double>> RowValue;
 };
 struct ColumnDefType
 { //数据类型
@@ -85,6 +85,39 @@ struct ColumnDefType
 		this->type = TypeMP.at(typeName);
 	}
 };
+bool isInteger(const std::string &s)
+{
+	int cnt = 0;
+	for (auto i : s)
+	{
+		if (cnt++ == 0)
+			if (i == '-' || i == '+')
+				continue;
+		if (!isdigit(i))
+			return false;
+	}
+	return true;
+}
+bool isDecimal(const std::string &s)
+{
+	int cnt = 0;
+	int cnt1 = 0;
+	for (auto i : s)
+	{
+		if (cnt++ == 0)
+			if (i == '-' || i == '+')
+				continue;
+		if (i == '.')
+		{
+			cnt1++;
+			if (cnt1 != 1)
+				return false;
+		}
+		if (!isdigit(i))
+			return false;
+	}
+	return true;
+}
 struct ColumnInfo
 { //列声明
 	std::string name;
@@ -105,7 +138,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string> readCol(std::string data)
+	std::variant<int, long long, unsigned long long, std::string, float, double> readCol(std::string data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -114,9 +147,8 @@ struct ColumnInfo
 			Signed [-128,127]
 			Unsigned [0,255]
 			*/
-			for (char &c : data)
-				if (c < '0' || c > '9')
-					return 0;
+			if (!isInteger(data))
+				return 0;
 			try
 			{
 				int x = std::stoi(data);
@@ -145,9 +177,8 @@ struct ColumnInfo
 			Signed [-32768,32767]
 			Unsigned [0,65535]
 			*/
-			for (char &c : data)
-				if (c < '0' || c > '9')
-					return 0;
+			if (!isInteger(data))
+				return 0;
 			try
 			{
 				int x = std::stoi(data);
@@ -177,9 +208,8 @@ struct ColumnInfo
 			Signed [-8388608,8388607]
 			Unsigned [0,16777215]
 			*/
-			for (char &c : data)
-				if (c < '0' || c > '9')
-					return 0;
+			if (!isInteger(data))
+				return 0;
 			try
 			{
 				int x = std::stoi(data);
@@ -208,9 +238,8 @@ struct ColumnInfo
 			Signed [-2147483648,2147483647]
 			Unsigned [0,4294967295]
 			*/
-			for (char &c : data)
-				if (c < '0' || c > '9')
-					return 0;
+			if (!isInteger(data))
+				return 0;
 			try
 			{
 				long long x = std::stoll(data);
@@ -239,9 +268,8 @@ struct ColumnInfo
 			Signed [-9223372036854775808,9223372036854775807]
 			Unsigned [0,18446744073709551615]
 			*/
-			for (char &c : data)
-				if (c < '0' || c > '9')
-					return 0;
+			if (!isInteger(data))
+				return 0;
 			try
 			{
 				if (!this->isUnsigned)
@@ -266,14 +294,37 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			return data;
+
+			if (isDecimal(data))
+			{
+				try
+				{
+					float ret = std::stof(data);
+					return ret;
+				}
+				catch (std::exception)
+				{
+				}
+			}
+			return 0.0;
 		}
 		if (this->columnDef.type == ValueType::Vdouble)
 		{
 			/*
 			not appeared
 			*/
-			return data;
+			if (isDecimal(data))
+			{
+				try
+				{
+					double ret = std::stod(data);
+					return ret;
+				}
+				catch (std::exception)
+				{
+				}
+			}
+			return 0.0;
 		}
 		if (this->columnDef.type == ValueType::Vdecimal)
 		{
@@ -314,9 +365,16 @@ struct ColumnInfo
 			/*
 			 YYYY-MM-DD HH:MM:SS.xx 注意 小数点后多一个数据
 			 1000-01-01 00:00:00.0
-			 21位
 			*/
-			return data;
+			/*
+			std::string regex_template("\\d{4}[-]\\d{2}[-]\\d{2}[ ]\\d{2}[:]\\d{2}[:]\\d{2}[.]\\d{1,3}");
+			std::regex pattern(regex_template, std::regex::icase);
+			std::match_results<std::string::const_iterator> result;
+
+			if (std::regex_match(data, result, pattern))
+				return data;
+			*/
+			return "2020-04-01 00:00:00.0";
 		}
 		if (this->columnDef.type == ValueType::Vtimestamp)
 		{
@@ -541,6 +599,10 @@ struct TableInfo
 				if (auto pval = std::get_if<std::string>(&value))
 					dataSink << *pval;
 				else if (auto pval = std::get_if<int>(&value))
+					dataSink << *pval;
+				else if (auto pval = std::get_if<double>(&value))
+					dataSink << *pval;
+				else if (auto pval = std::get_if<float>(&value))
 					dataSink << *pval;
 				else if (auto pval = std::get_if<long long>(&value))
 					dataSink << *pval;
