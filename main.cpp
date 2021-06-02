@@ -141,6 +141,8 @@ Output:
 **/
 int main(int argc, char *argv[])
 {
+	std::ios::sync_with_stdio(false);
+
 	Demo *demo = new Demo();
 
 	static struct option long_options[] = {

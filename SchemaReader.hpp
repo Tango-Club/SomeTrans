@@ -60,7 +60,7 @@ const std::unordered_map<std::string, ValueType> TypeMP{
 	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
-	std::vector<std::variant<int, long long, std::string>> RowValue;
+	std::vector<std::variant<int, long long, unsigned long long, std::string>> RowValue;
 };
 struct ColumnDefType
 { //数据类型
@@ -105,7 +105,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, std::string> readCol(std::string data)
+	std::variant<int, long long, unsigned long long, std::string> readCol(std::string data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -114,7 +114,29 @@ struct ColumnInfo
 			Signed [-128,127]
 			Unsigned [0,255]
 			*/
-			return data;
+			for (char &c : data)
+				if (c < '0' || c > '9')
+					return 0;
+			try
+			{
+				int x = std::stoi(data);
+				if (!this->isUnsigned)
+				{
+					if (x < -128 || x > 127)
+						return 0;
+					return x;
+				}
+				else
+				{
+					if (x < 0 || x > 255)
+						return 0;
+					return x;
+				}
+			}
+			catch (const std::exception &e)
+			{
+			}
+			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vsmallint)
 		{
@@ -123,7 +145,29 @@ struct ColumnInfo
 			Signed [-32768,32767]
 			Unsigned [0,65535]
 			*/
-			return data;
+			for (char &c : data)
+				if (c < '0' || c > '9')
+					return 0;
+			try
+			{
+				int x = std::stoi(data);
+				if (!this->isUnsigned)
+				{
+					if (x < -32768 || x > 32767)
+						return 0;
+					return x;
+				}
+				else
+				{
+					if (x < 0 || x > 65535)
+						return 0;
+					return x;
+				}
+			}
+			catch (const std::exception &e)
+			{
+			}
+			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vmediumint)
 		{
@@ -133,16 +177,60 @@ struct ColumnInfo
 			Signed [-8388608,8388607]
 			Unsigned [0,16777215]
 			*/
-			return data;
+			for (char &c : data)
+				if (c < '0' || c > '9')
+					return 0;
+			try
+			{
+				int x = std::stoi(data);
+				if (!this->isUnsigned)
+				{
+					if (x < -8388608 || x > 8388607)
+						return 0;
+					return x;
+				}
+				else
+				{
+					if (x < 0 || x > 16777215)
+						return 0;
+					return x;
+				}
+			}
+			catch (const std::exception &e)
+			{
+			}
+			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vint)
 		{
 			/*
-			int
+			long long
 			Signed [-2147483648,2147483647]
 			Unsigned [0,4294967295]
 			*/
-			return data;
+			for (char &c : data)
+				if (c < '0' || c > '9')
+					return 0;
+			try
+			{
+				long long x = std::stoll(data);
+				if (!this->isUnsigned)
+				{
+					if (x < -2147483648 || x > 2147483647)
+						return 0;
+					return x;
+				}
+				else
+				{
+					if (x < 0 || x > 4294967295)
+						return 0;
+					return x;
+				}
+			}
+			catch (const std::exception &e)
+			{
+			}
+			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vbigint)
 		{
@@ -151,7 +239,26 @@ struct ColumnInfo
 			Signed [-9223372036854775808,9223372036854775807]
 			Unsigned [0,18446744073709551615]
 			*/
-			return data;
+			for (char &c : data)
+				if (c < '0' || c > '9')
+					return 0;
+			try
+			{
+				if (!this->isUnsigned)
+				{
+					long long x = std::stoll(data);
+					return x;
+				}
+				else
+				{
+					unsigned long long x = std::stoull(data);
+					return x;
+				}
+			}
+			catch (const std::exception &e)
+			{
+			}
+			return 0;
 		}
 		//整型 非法整数数值
 		if (this->columnDef.type == ValueType::Vfloat)
@@ -368,7 +475,6 @@ struct TableInfo
 		{
 			std::string colStr;
 			std::getline(schemaInfo, colStr);
-			std::cout << colStr << std::endl;
 			rapidjson::Document doc;
 			doc.Parse(colStr.c_str());
 			columns.emplace_back(ColumnInfo(doc));
@@ -432,9 +538,13 @@ struct TableInfo
 					f = 0;
 				else
 					dataSink << "	";
-				if (auto pval = std::get_if<int>(&value))
+				if (auto pval = std::get_if<std::string>(&value))
 					dataSink << *pval;
-				else if (auto pval = std::get_if<std::string>(&value))
+				else if (auto pval = std::get_if<int>(&value))
+					dataSink << *pval;
+				else if (auto pval = std::get_if<long long>(&value))
+					dataSink << *pval;
+				else if (auto pval = std::get_if<unsigned long long>(&value))
 					dataSink << *pval;
 				else
 					assert(0);
