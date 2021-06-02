@@ -105,7 +105,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, std::string> readCol(std::ifstream &dataSource)
+	std::variant<int, long long, std::string> readCol(std::string data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -114,8 +114,6 @@ struct ColumnInfo
 			Signed [-128,127]
 			Unsigned [0,255]
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vsmallint)
@@ -125,8 +123,6 @@ struct ColumnInfo
 			Signed [-32768,32767]
 			Unsigned [0,65535]
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vmediumint)
@@ -137,8 +133,6 @@ struct ColumnInfo
 			Signed [-8388608,8388607]
 			Unsigned [0,16777215]
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vint)
@@ -148,8 +142,6 @@ struct ColumnInfo
 			Signed [-2147483648,2147483647]
 			Unsigned [0,4294967295]
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vbigint)
@@ -159,8 +151,6 @@ struct ColumnInfo
 			Signed [-9223372036854775808,9223372036854775807]
 			Unsigned [0,18446744073709551615]
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		//整型 非法整数数值
@@ -169,8 +159,6 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vdouble)
@@ -178,16 +166,12 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vdecimal)
 		{
 			/*
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		//浮点型 超长浮点数精度
@@ -198,8 +182,6 @@ struct ColumnInfo
 			 YYYY-MM-DD 
 			 1000-01-01 
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtime)
@@ -209,8 +191,6 @@ struct ColumnInfo
 			 HH:MM:SS 
 			-838:59:59
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vyear)
@@ -220,8 +200,6 @@ struct ColumnInfo
 			 YYYY 
 			 1901 
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vdatetime)
@@ -231,27 +209,6 @@ struct ColumnInfo
 			 1000-01-01 00:00:00.0
 			 21位
 			*/
-			std::string data;
-			char c = ' ';
-			while (c == 9 || c == ' ')
-			{
-				dataSource.get(c);
-			}
-			data += c;
-			for (int i = 1; i <= 3; i++)
-			{
-				dataSource.get(c);
-				data += c;
-			}
-			if (data != "null")
-			{
-				for (int i = 1; i <= 17; i++)
-				{
-					dataSource.get(c);
-					data += c;
-				}
-			}
-			std::cout << data << std::endl;
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtimestamp)
@@ -261,8 +218,6 @@ struct ColumnInfo
 			 YYYY-MM-DD HH:MM:SS
 			 19700101080001
 			*/
-			std::string data;
-			dataSource >> data;
 			return data;
 		}
 		//时间 非法时间数据
@@ -270,8 +225,6 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			std::string data;
-			dataSource >> data;
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
@@ -280,8 +233,6 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			std::string data;
-			dataSource >> data;
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
@@ -291,8 +242,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
+			while (data.length() > this->length)
+				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtinytext)
@@ -300,8 +251,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
+			while (data.length() > this->length)
+				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vblob)
@@ -309,16 +260,14 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
+			while (data.length() > this->length)
+				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtext)
 		{
 			/*
 			*/
-			std::string data;
-			dataSource >> data;
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
@@ -328,8 +277,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
+			while (data.length() > this->length)
+				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vmediumtext)
@@ -337,8 +286,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
+			while (data.length() > this->length)
+				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vlongblob)
@@ -346,8 +295,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
+			while (data.length() > this->length)
+				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vlongtext)
@@ -355,8 +304,8 @@ struct ColumnInfo
 			/*
 			not appeared
 			*/
-			std::string data;
-			dataSource >> data;
+			while (data.length() > this->length)
+				data.pop_back();
 			return data;
 		}
 		//文本 超长字符长度
@@ -449,9 +398,15 @@ struct TableInfo
 	void readRow(std::ifstream &dataSource)
 	{
 		RowData rowData;
-		for (auto col : columns)
+		std::string rowStr;
+		std::getline(dataSource, rowStr);
+		std::regex tabRe("	");
+		std::vector<std::string> vecStr(
+			std::sregex_token_iterator(rowStr.begin(), rowStr.end(), tabRe, -1),
+			std::sregex_token_iterator());
+		for (int i = 0; i < columns.size(); i++)
 		{
-			rowData.RowValue.push_back(col.readCol(dataSource));
+			rowData.RowValue.push_back(columns[i].readCol(vecStr[i + 1]));
 		}
 		this->datas.push_back(rowData);
 	}
@@ -467,10 +422,11 @@ struct TableInfo
 		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
 		std::ofstream dataSink(path);
-		for (auto row : datas)
+		int rNums = 0;
+		for (auto &row : datas)
 		{
 			bool f = 1;
-			for (auto value : row.RowValue)
+			for (auto &value : row.RowValue)
 			{
 				if (f)
 					f = 0;
@@ -483,7 +439,9 @@ struct TableInfo
 				else
 					assert(0);
 			}
-			dataSink << std::endl;
+			rNums++;
+			if (rNums != datas.size())
+				dataSink << std::endl;
 		}
 	}
 };

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -86,11 +87,11 @@ public:
 				sourceData >> dataBase >> tableName;
 				if (!tables.count(tableName))
 				{
-					std::cout << "table: " + tableName + " not found" << std::endl;
+					std::cout << p++ << "-"
+							  << "table: " + tableName + " not found" << std::endl;
 				}
 				tables.at(tableName).readRow(sourceData);
-				std::cout << p++ << "-"
-						  << "table: " + tableName + " found" << std::endl;
+				p++;
 			}
 			else
 			{
