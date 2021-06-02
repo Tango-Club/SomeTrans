@@ -3,7 +3,7 @@
 #else
 #define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
 #endif
-
+const double eps = 1e-8;
 /*
 数据库定义
 */
@@ -145,7 +145,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string, float, double> readCol(const std::string &data)
+	std::variant<int, long long, unsigned long long, std::string, float, double> readCol(std::string &data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -313,7 +313,7 @@ struct ColumnInfo
 				{
 				}
 			}
-			return 0.0;
+			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vdouble)
 		{
@@ -331,7 +331,7 @@ struct ColumnInfo
 				{
 				}
 			}
-			return 0.0;
+			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vdecimal)
 		{
@@ -346,12 +346,9 @@ struct ColumnInfo
 				}
 				catch (std::exception e)
 				{
-					std::cout << e.what() << std::endl;
 				}
 			}
-			std::cout << data << std::endl;
-			assert(0);
-			return 0.0;
+			return 0;
 		}
 		//浮点型 超长浮点数精度
 		if (this->columnDef.type == ValueType::Vdate)
@@ -395,7 +392,7 @@ struct ColumnInfo
 			if (std::regex_match(data, result, pattern))
 				return data;
 			*/
-			for (char &c : data)
+			for (auto &c : data)
 			{
 				if (c <= '9' && c >= '0')
 					continue;
@@ -543,6 +540,20 @@ struct RowDataCmp
 		return 0;
 	}
 };
+struct RowDataEqual
+{
+	const std::vector<PrimeKeyInfo> &primeKeys;
+	RowDataEqual(const std::vector<PrimeKeyInfo> &keys) : primeKeys(keys) {}
+	bool operator()(const RowData &lhs, const RowData &rhs)
+	{
+		for (auto &primeKey : this->primeKeys)
+		{
+			if (lhs.RowValue[primeKey.index] != rhs.RowValue[primeKey.index])
+				return false;
+		}
+		return true;
+	}
+};
 struct TableInfo
 { //表声明
 	std::string tableName;
@@ -593,7 +604,6 @@ struct TableInfo
 		RowData rowData;
 		std::string rowStr;
 		std::getline(dataSource, rowStr);
-		std::cout<<rowStr<<std::endl;
 		std::regex tabRe("	");
 		std::vector<std::string> vecStr(
 			std::sregex_token_iterator(rowStr.begin(), rowStr.end(), tabRe, -1),
@@ -607,6 +617,7 @@ struct TableInfo
 	void sortDatas()
 	{
 		std::sort(datas.begin(), datas.end(), RowDataCmp(primeKeys));
+		datas.erase(unique(datas.begin(), datas.end(), RowDataEqual(primeKeys)), datas.end());
 	}
 	void sink(std::string path)
 	{
@@ -623,6 +634,7 @@ struct TableInfo
 		for (auto &row : datas)
 		{
 			bool f = 1;
+			int cNums = 0;
 			for (auto &value : row.RowValue)
 			{
 				if (f)
@@ -635,10 +647,17 @@ struct TableInfo
 					dataSink << *pval;
 				else if (auto pval = std::get_if<double>(&value))
 				{
-					if (this->columns[rNums].columnDef.type == ValueType::Vdecimal)
+					if (this->columns[cNums].columnDef.type == ValueType::Vdecimal)
 					{
-						dataSink << "d" << std::setiosflags(std::ios::fixed)
-								 << std::setprecision(this->columns[rNums].columnDef.args[1]) << *pval;
+						double p = *pval;
+						bool sign = 0;
+						if (p < 0)
+						{
+							p = -p;
+							dataSink << "-";
+						}
+						dataSink << std::setiosflags(std::ios::fixed)
+								 << std::setprecision(this->columns[cNums].columnDef.args[1]) << p + eps;
 						dataSink.unsetf(std::ios::adjustfield | std::ios::basefield | std::ios::floatfield);
 					}
 					else
@@ -652,6 +671,7 @@ struct TableInfo
 					dataSink << *pval;
 				else
 					assert(0);
+				cNums++;
 			}
 			rNums++;
 			if (rNums != datas.size())
