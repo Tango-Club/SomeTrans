@@ -1,9 +1,13 @@
+#include <dirent.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include <algorithm>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <regex>
 #include <string>
@@ -11,9 +15,6 @@
 #include <unordered_set>
 #include <variant>
 #include <vector>
-#include<dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
