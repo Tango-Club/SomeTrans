@@ -11,8 +11,10 @@
 #include <unordered_set>
 #include <variant>
 #include <vector>
+#include<dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-#include "direct.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"

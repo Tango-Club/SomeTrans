@@ -580,9 +580,13 @@ struct TableInfo
 	}
 	void sink(std::string path)
 	{
-		this->sortDatas();
-		if (access(path.c_str(), 0) == -1)
-			mkdir(path.c_str());
+#define MODE (S_IRWXU | S_IRWXG | S_IRWXO)
+        this->sortDatas();
+        DIR *mydir = NULL;
+        if((mydir= opendir(path.c_str()))==NULL)//判断目录
+        {
+            int ret = mkdir(path.c_str(), MODE);//创建目录
+        }
 		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
 		std::ofstream dataSink(path);
