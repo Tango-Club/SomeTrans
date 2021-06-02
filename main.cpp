@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -35,6 +36,10 @@ const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";							
 const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";										// 输出文件名模板，无需修改。
 const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
 
+time_t getTime()
+{
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
 class Demo
 {
 public:
@@ -45,6 +50,7 @@ public:
 public:
 	bool initialSchemaInfo()
 	{
+		time_t startTime = getTime();
 		std::cout << "Read schema_info_dir/schema.info file and construct table in memory." << std::endl;
 		std::string path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
 		std::cout << "path: " << path << std::endl;
@@ -63,10 +69,13 @@ public:
 			std::cout << "read table:"
 					  << " " << table.tableName << " success." << std::endl;
 		}
+		time_t endTime = getTime();
+		std::cout << "initialSchemaInfo time use : " << endTime - startTime << std::endl;
 		return true;
 	}
 	bool loadSourceData(int dataNumber)
 	{
+		time_t startTime = getTime();
 		std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
 		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
 		std::cout << "path: " << path << std::endl;
@@ -101,6 +110,9 @@ public:
 				assert(0);
 			}
 		}
+		time_t endTime = getTime();
+		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
+
 		return true;
 	}
 
@@ -112,6 +124,7 @@ public:
 
 	void sinkData()
 	{
+		time_t startTime = getTime();
 		std::cout << "Sink the data." << std::endl;
 		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
 		std::cout << "path: " << path << std::endl;
@@ -119,7 +132,8 @@ public:
 		{
 			table.second.sink(path);
 		}
-		return;
+		time_t endTime = getTime();
+		std::cout << "sinkData time use : " << endTime - startTime << std::endl;
 	}
 };
 
@@ -144,6 +158,7 @@ Output:
 **/
 int main(int argc, char *argv[])
 {
+	time_t startTime = getTime();
 	std::ios::sync_with_stdio(false);
 
 	Demo *demo = new Demo();
@@ -194,5 +209,7 @@ int main(int argc, char *argv[])
 	demo->sinkData();
 	std::cout << "[End]\tsink to target file." << std::endl;
 
+	time_t endTime = getTime();
+	std::cout << "All time use : " << endTime - startTime << std::endl;
 	return 0;
 }
