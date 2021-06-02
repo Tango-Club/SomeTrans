@@ -120,7 +120,7 @@ bool isDecimal(const std::string &s)
 				return false;
 			continue;
 		}
-		if (!isdigit(i))
+		else if (!isdigit(i))
 			return false;
 	}
 	return true;
