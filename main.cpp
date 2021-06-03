@@ -56,6 +56,7 @@ public:
 		std::string path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
 		std::cout << "path: " << path << std::endl;
 		std::ifstream schemaInfo(path);
+		schemaInfo.tie(0);
 		if (!schemaInfo.is_open())
 		{
 			std::cout << "not found: schemaInfo" << std::endl;
@@ -80,6 +81,7 @@ public:
 		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
 		std::cout << "path: " << path << std::endl;
 		std::ifstream sourceData(path);
+		sourceData.tie(0);
 		if (!sourceData.is_open())
 		{
 			std::cout << "not found: sourceData " + std::to_string(dataNumber) << std::endl;

@@ -619,7 +619,7 @@ struct TableInfo
 		std::sort(datas.begin(), datas.end(), RowDataCmp(primeKeys));
 		datas.erase(unique(datas.begin(), datas.end(), RowDataEqual(primeKeys)), datas.end());
 	}
-	void sink(const std::string &path)
+	void sink(std::string &path)
 	{
 		this->sortDatas();
 		DIR *mydir = nullptr;
@@ -630,6 +630,7 @@ struct TableInfo
 		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
 		std::ofstream dataSink(path);
+		dataSink.tie(0);
 		size_t rNums = 0;
 		for (auto &row : datas)
 		{

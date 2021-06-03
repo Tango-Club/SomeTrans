@@ -9,15 +9,9 @@ echo "echo1: $1"
 echo "echo2: $2"
 echo "echo3: $3"
 echo "echo4: $4"
-
-
 APP_HOME=main.cpp
 OUT_NAME=main
-g++ $APP_HOME -std=c++17 -o $OUT_NAME
-
-#(函数)启动程序
+g++ $APP_HOME -std=c++17 -o $OUT_NAME  -Ofast
 echo "start $0 $1 $2 $3 $4"
-
 ./$OUT_NAME $@
-
 echo "end"
