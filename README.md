@@ -6,9 +6,14 @@
   - [ ] 索引
   - [X] 主键
 - [ ] 行数据读入整合
-- [ ] UK/PK去重
-- [ ] 非法数据清洗
-- [ ] 数据写入目标文件
+  - [X]内存存储
+  - [ ]fread替换文件流
+  - [ ]多线程 
+- [ ] UK/PK去重排序
+  - [X]内存存储
+  - [ ]文件merge 
+- [X] 非法数据清洗
+- [X] 数据写入目标文件
 ### Notes
 * 硬件
 	* 选手迁移程序评测环境中存在两块PMEM内存供使用，以fsdax方式开放给选手。挂载目录为/input和/output目录，其中/input目录为只读，/output目录为可读写。待迁移数据会存储在/input目录下，整理好的数据或是临时数据可存储于/output目录下，而/output同时也是初赛中的输出数据目录。
@@ -27,4 +32,4 @@
     * 为了便于选手调试程序，我们开放了和评测环境一致的Docker Image供选手测试，使用如下命令运行镜像：
       * docker pull rv2001/tianchi-contest:public1.0
       * docker run -it rv2001/tianchi-contest:public1.0 /bin/bash
-
+    * 数据采用TPC-C标准生成 https://github.com/Percona-Lab/tpcc-mysql

@@ -28,115 +28,115 @@
  * @author dts，just for demo.
  * @author pxl, fuck demo.
  */
-const std::string DATABASE_NAME = "tianchi_dts_data";														// 待处理数据库名，无需修改
-const std::string SCHEMA_FILE_DIR = "schema_info_dir";														// schema文件夹，无需修改。
-const std::string SCHEMA_FILE_NAME = "schema.info";															// schema文件名，无需修改。
-const std::string SOURCE_FILE_DIR = "source_file_dir";														// 输入文件夹，无需修改。
-const std::string SINK_FILE_DIR = "sink_file_dir";															// 输出文件夹，无需修改。
-const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";									// 输入文件名，无需修改。
-const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";										// 输出文件名模板，无需修改。
+const std::string DATABASE_NAME = "tianchi_dts_data";                                                       // 待处理数据库名，无需修改
+const std::string SCHEMA_FILE_DIR = "schema_info_dir";                                                      // schema文件夹，无需修改。
+const std::string SCHEMA_FILE_NAME = "schema.info";                                                         // schema文件名，无需修改。
+const std::string SOURCE_FILE_DIR = "source_file_dir";                                                      // 输入文件夹，无需修改。
+const std::string SINK_FILE_DIR = "sink_file_dir";                                                          // 输出文件夹，无需修改。
+const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";                                   // 输入文件名，无需修改。
+const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";                                       // 输出文件名模板，无需修改。
 const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
 
 time_t getTime()
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
 class Demo
 {
 public:
-	std::string sourceDirectory;
-	std::string sinkDirectory;
-	std::unordered_map<std::string, TableInfo> tables;
+  std::string sourceDirectory;
+  std::string sinkDirectory;
+  std::unordered_map<std::string, TableInfo> tables;
 
 public:
-	bool initialSchemaInfo()
-	{
-		time_t startTime = getTime();
-		std::cout << "Read schema_info_dir/schema.info file and construct table in memory." << std::endl;
-		std::string path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
-		std::cout << "path: " << path << std::endl;
-		std::ifstream schemaInfo(path);
-		schemaInfo.tie(0);
-		if (!schemaInfo.is_open())
-		{
-			std::cout << "not found: schemaInfo" << std::endl;
-			return false;
-		}
-		while (schemaInfo.peek() != EOF)
-		{
-			TableInfo table(schemaInfo);
-			assert(table.tableName != "");
-			tables.insert({table.tableName, table});
-			std::cout << "read table:"
-					  << " " << table.tableName << " success." << std::endl;
-		}
-		time_t endTime = getTime();
-		std::cout << "initialSchemaInfo time use : " << endTime - startTime << std::endl;
-		return true;
-	}
-	bool loadSourceData(int dataNumber)
-	{
-		time_t startTime = getTime();
-		std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
-		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
-		std::cout << "path: " << path << std::endl;
-		std::ifstream sourceData(path);
-		sourceData.tie(0);
-		if (!sourceData.is_open())
-		{
-			std::cout << "not found: sourceData " + std::to_string(dataNumber) << std::endl;
-			sourceData.close();
-			return false;
-		}
-		int p = 1;
-		while (sourceData.peek() != EOF)
-		{
-			std::string op;
-			sourceData >> op;
-			if (op == "")
-				break;
-			if (op == "I")
-			{
-				std::string dataBase;
-				std::string tableName;
-				sourceData >> dataBase >> tableName;
-				if (!tables.count(tableName))
-				{
-					std::cout << p++ << "-"
-							  << "table: " + tableName + " not found" << std::endl;
-				}
-				tables.at(tableName).readRow(sourceData);
-				p++;
-			}
-			else
-			{
-				assert(0);
-			}
-		}
-		time_t endTime = getTime();
-		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
-		return true;
-	}
+  bool initialSchemaInfo()
+  {
+    time_t startTime = getTime();
+    std::cout << "Read schema_info_dir/schema.info file and construct table in memory." << std::endl;
+    std::string path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
+    std::cout << "path: " << path << std::endl;
+    std::ifstream schemaInfo(path);
+    schemaInfo.tie(0);
+    if (!schemaInfo.is_open())
+    {
+      std::cout << "not found: schemaInfo" << std::endl;
+      return false;
+    }
+    while (schemaInfo.peek() != EOF)
+    {
+      TableInfo table(schemaInfo);
+      assert(table.tableName != "");
+      tables.insert({table.tableName, table});
+      std::cout << "read table:"
+                << " " << table.tableName << " success." << std::endl;
+    }
+    time_t endTime = getTime();
+    std::cout << "initialSchemaInfo time use : " << endTime - startTime << std::endl;
+    return true;
+  }
+  bool loadSourceData(int dataNumber)
+  {
+    time_t startTime = getTime();
+    std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
+    std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
+    std::cout << "path: " << path << std::endl;
+    std::ifstream sourceData(path);
+    sourceData.tie(0);
+    if (!sourceData.is_open())
+    {
+      std::cout << "not found: sourceData " + std::to_string(dataNumber) << std::endl;
+      sourceData.close();
+      return false;
+    }
+    int p = 1;
+    while (sourceData.peek() != EOF)
+    {
+      std::string op;
+      sourceData >> op;
+      if (op == "")
+        break;
+      if (op == "I")
+      {
+        std::string dataBase;
+        std::string tableName;
+        sourceData >> dataBase >> tableName;
+        if (!tables.count(tableName))
+        {
+          std::cout << p++ << "-"
+                    << "table: " + tableName + " not found" << std::endl;
+        }
+        tables.at(tableName).readRow(sourceData);
+        p++;
+      }
+      else
+      {
+        assert(0);
+      }
+    }
+    time_t endTime = getTime();
+    std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
+    return true;
+  }
 
-	void cleanData()
-	{
-		std::cout << "Clean and sort the source data." << std::endl;
-		return;
-	}
+  void cleanData()
+  {
+    std::cout << "Clean and sort the source data." << std::endl;
+    return;
+  }
 
-	void sinkData()
-	{
-		time_t startTime = getTime();
-		std::cout << "Sink the data." << std::endl;
-		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
-		std::cout << "path: " << path << std::endl;
-		for (auto &table : tables)
-		{
-			table.second.sink(path);
-		}
-		time_t endTime = getTime();
-		std::cout << "sinkData time use : " << endTime - startTime << std::endl;
-	}
+  void sinkData()
+  {
+    time_t startTime = getTime();
+    std::cout << "Sink the data." << std::endl;
+    std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
+    std::cout << "path: " << path << std::endl;
+    for (auto &table : tables)
+    {
+      table.second.sink(path);
+    }
+    time_t endTime = getTime();
+    std::cout << "sinkData time use : " << endTime - startTime << std::endl;
+  }
 };
 
 /**
@@ -160,58 +160,59 @@ Output:
 **/
 int main(int argc, char *argv[])
 {
-	time_t startTime = getTime();
-	std::shared_ptr<Demo> demo(new Demo());
+  std::ios_base::sync_with_stdio(false);
+  time_t startTime = getTime();
+  std::shared_ptr<Demo> demo(new Demo());
 
-	static struct option long_options[] = {
-		{"input_dir", required_argument, 0, 'i'},
-		{"output_dir", required_argument, 0, 'o'},
-		{"output_db_url", required_argument, 0, 'r'},
-		{"output_db_user", required_argument, 0, 'u'},
-		{"output_db_passwd", required_argument, 0, 'p'},
-		{0, 0, 0, 0}};
-	int opt_index;
-	int opt;
+  static struct option long_options[] = {
+      {"input_dir", required_argument, 0, 'i'},
+      {"output_dir", required_argument, 0, 'o'},
+      {"output_db_url", required_argument, 0, 'r'},
+      {"output_db_user", required_argument, 0, 'u'},
+      {"output_db_passwd", required_argument, 0, 'p'},
+      {0, 0, 0, 0}};
+  int opt_index;
+  int opt;
 
-	while (-1 != (opt = getopt_long(argc, argv, "", long_options, &opt_index)))
-	{
+  while (-1 != (opt = getopt_long(argc, argv, "", long_options, &opt_index)))
+  {
 
-		switch (opt)
-		{
-		case 'i':
-			demo->sourceDirectory = optarg;
-			break;
-		case 'o':
-			demo->sinkDirectory = optarg;
-			break;
-		}
-	}
+    switch (opt)
+    {
+    case 'i':
+      demo->sourceDirectory = optarg;
+      break;
+    case 'o':
+      demo->sinkDirectory = optarg;
+      break;
+    }
+  }
 
-	std::cout << "[Start]\tload schema information." << std::endl;
-	// load schema information.
-	demo->initialSchemaInfo();
-	std::cout << "[End]\tload schema information." << std::endl;
+  std::cout << "[Start]\tload schema information." << std::endl;
+  // load schema information.
+  demo->initialSchemaInfo();
+  std::cout << "[End]\tload schema information." << std::endl;
 
-	// load input Start file.
-	std::cout << "[Start]\tload input Start file." << std::endl;
-	int dataNumber = 1;
-	while (demo->loadSourceData(dataNumber))
-		dataNumber++;
-	std::cout << "[End]\tload input Start file." << std::endl;
+  // load input Start file.
+  std::cout << "[Start]\tload input Start file." << std::endl;
+  int dataNumber = 1;
+  while (demo->loadSourceData(dataNumber))
+    dataNumber++;
+  std::cout << "[End]\tload input Start file." << std::endl;
 
-	/*
+  /*
 	// data clean.
 	std::cout << "[Start]\tdata clean." << std::endl;
 	demo->cleanData();
 	std::cout << "[End]\tdata clean." << std::endl;
 	*/
 
-	// sink to target file
-	std::cout << "[Start]\tsink to target file." << std::endl;
-	demo->sinkData();
-	std::cout << "[End]\tsink to target file." << std::endl;
+  // sink to target file
+  std::cout << "[Start]\tsink to target file." << std::endl;
+  demo->sinkData();
+  std::cout << "[End]\tsink to target file." << std::endl;
 
-	time_t endTime = getTime();
-	std::cout << "All time use : " << endTime - startTime << std::endl;
-	return 0;
+  time_t endTime = getTime();
+  std::cout << "All time use : " << endTime - startTime << std::endl;
+  return 0;
 }

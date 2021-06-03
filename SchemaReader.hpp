@@ -208,14 +208,15 @@ struct ColumnInfo
 			}
 			return 0;
 		}
+		/*
 		if (this->columnDef.type == ValueType::Vmediumint)
 		{
-			/*
+			
 			not appeared
 			int
 			Signed [-8388608,8388607]
 			Unsigned [0,16777215]
-			*/
+			
 			if (!isInteger(data))
 				return 0;
 			try
@@ -239,6 +240,7 @@ struct ColumnInfo
 			}
 			return 0;
 		}
+		*/
 		if (this->columnDef.type == ValueType::Vint)
 		{
 			/*
@@ -297,11 +299,12 @@ struct ColumnInfo
 			return 0;
 		}
 		//整型 非法整数数值
+		/*
 		if (this->columnDef.type == ValueType::Vfloat)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 
 			if (isDecimal(data))
 			{
@@ -318,9 +321,9 @@ struct ColumnInfo
 		}
 		if (this->columnDef.type == ValueType::Vdouble)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			if (isDecimal(data))
 			{
 				try
@@ -334,6 +337,7 @@ struct ColumnInfo
 			}
 			return 0;
 		}
+		*/
 		if (this->columnDef.type == ValueType::Vdecimal)
 		{
 			/*
@@ -352,33 +356,35 @@ struct ColumnInfo
 			return 0;
 		}
 		//浮点型 超长浮点数精度
+		/*
 		if (this->columnDef.type == ValueType::Vdate)
 		{
-			/*
+			
 			not appeared
 			 YYYY-MM-DD 
 			 1000-01-01 
-			*/
+			
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vtime)
 		{
-			/*
+			
 			not appeared
 			 HH:MM:SS 
 			-838:59:59
-			*/
+			
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vyear)
 		{
-			/*
+			
 			not appeared
 			 YYYY 
 			 1901 
-			*/
+			
 			return data;
 		}
+		*/
 		if (this->columnDef.type == ValueType::Vdatetime)
 		{
 			/*
@@ -403,15 +409,17 @@ struct ColumnInfo
 			}
 			return data;
 		}
+		/*
 		if (this->columnDef.type == ValueType::Vtimestamp)
 		{
-			/*
+			
 			not appeared
 			 YYYY-MM-DD HH:MM:SS
 			 19700101080001
-			*/
+			
 			return data;
 		}
+		*/
 		//时间 非法时间数据
 		if (this->columnDef.type == ValueType::Vchar)
 		{
@@ -429,33 +437,36 @@ struct ColumnInfo
 				data.pop_back();
 			return data;
 		}
+		/*
 		if (this->columnDef.type == ValueType::Vtinyblob)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
 		}
+		
 		if (this->columnDef.type == ValueType::Vtinytext)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vblob)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
 		}
+		*/
 		if (this->columnDef.type == ValueType::Vtext)
 		{
 			/*
@@ -464,44 +475,45 @@ struct ColumnInfo
 				data.pop_back();
 			return data;
 		}
+		/*
 		if (this->columnDef.type == ValueType::Vmediumblob)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vmediumtext)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vlongblob)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vlongtext)
 		{
-			/*
+			
 			not appeared
-			*/
+			
 			while (data.length() > this->length)
 				data.pop_back();
 			return data;
 		}
+		*/
 		//文本 超长字符长度
-		assert(0);
 		return 0;
 	}
 };
@@ -669,8 +681,6 @@ struct TableInfo
 					dataSink << *pval;
 				else if (auto pval = std::get_if<unsigned long long>(&value))
 					dataSink << *pval;
-				else
-					assert(0);
 				cNums++;
 			}
 			rNums++;
