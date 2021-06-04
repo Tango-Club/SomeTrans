@@ -41,16 +41,22 @@ time_t getTime()
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
-void splitStr(const std::string &str, std::vector<std::string> &tokens, const std::string &delimiters = "	")
+void splitStr(const std::string &str, std::vector<std::string> &tokens)
 {
-	std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
-	std::string::size_type pos = str.find_first_of(delimiters, lastPos);
-	while (std::string::npos != pos || std::string::npos != lastPos)
+	std::string tmp;
+	for (char c : str)
 	{
-		tokens.push_back(str.substr(lastPos, pos - lastPos));
-		lastPos = str.find_first_not_of(delimiters, pos);
-		pos = str.find_first_of(delimiters, lastPos);
+		if (c == '	')
+		{
+			std::string tmpM;
+			swap(tmp, tmpM);
+			tokens.push_back(std::move(tmpM));
+		}
+		else
+			tmp.push_back(c);
 	}
+	if (tmp.length())
+		tokens.push_back(std::move(tmp));
 }
 class Demo
 {
