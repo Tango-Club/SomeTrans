@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
-#include <regex>
+//#include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -22,8 +22,8 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#include "FastIO.hpp"
 #include "SchemaReader.hpp"
-
 /**
  * @author dts，just for demo.
  * @author pxl, fuck demo.
@@ -40,6 +40,17 @@ const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_li
 time_t getTime()
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+}
+void splitStr(const std::string &str, std::vector<std::string> &tokens, const std::string &delimiters = "	")
+{
+	std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+	std::string::size_type pos = str.find_first_of(delimiters, lastPos);
+	while (std::string::npos != pos || std::string::npos != lastPos)
+	{
+		tokens.push_back(str.substr(lastPos, pos - lastPos));
+		lastPos = str.find_first_not_of(delimiters, pos);
+		pos = str.find_first_of(delimiters, lastPos);
+	}
 }
 class Demo
 {
@@ -80,32 +91,35 @@ public:
 		std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
 		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
 		std::cout << "path: " << path << std::endl;
+
+		std::shared_ptr<fastIO::IN> sourceDataPtr = std::make_shared<fastIO::IN>(path);
 		std::ifstream sourceData(path);
-		sourceData.tie(0);
 		if (!sourceData.is_open())
 		{
 			std::cout << "not found: sourceData " + std::to_string(dataNumber) << std::endl;
-			sourceData.close();
 			return false;
 		}
 		int p = 1;
-		while (sourceData.peek() != EOF)
+		while (true)
 		{
-			std::string op;
-			sourceData >> op;
-			if (op == "")
+			std::string rowStr;
+			sourceDataPtr->readLine(rowStr);
+			if (sourceDataPtr->IOerror)
 				break;
+			std::vector<std::string> vecStr;
+			splitStr(rowStr, vecStr);
+			auto op = vecStr[0];
+			auto databaseName = vecStr[1];
+			auto tableName = vecStr[2];
+
 			if (op == "I")
 			{
-				std::string dataBase;
-				std::string tableName;
-				sourceData >> dataBase >> tableName;
 				if (!tables.count(tableName))
 				{
 					std::cout << p++ << "-"
 							  << "table: " + tableName + " not found" << std::endl;
 				}
-				tables.at(tableName).readRow(sourceData);
+				tables.at(tableName).readRow(vecStr);
 				p++;
 			}
 			else

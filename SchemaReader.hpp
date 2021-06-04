@@ -611,18 +611,12 @@ struct TableInfo
 			primeKeys.push_back(PrimeKeyInfo(doc, columns));
 		}
 	}
-	void readRow(std::ifstream &dataSource)
+	void readRow(std::vector<std::string> &vecStr)
 	{
 		RowData rowData;
-		std::string rowStr;
-		std::getline(dataSource, rowStr);
-		std::regex tabRe("	");
-		std::vector<std::string> vecStr(
-			std::sregex_token_iterator(rowStr.begin(), rowStr.end(), tabRe, -1),
-			std::sregex_token_iterator());
 		for (size_t i = 0; i < columns.size(); i++)
 		{
-			rowData.RowValue.push_back(columns[i].readCol(vecStr[i + 1]));
+			rowData.RowValue.push_back(columns[i].readCol(vecStr[i + 3]));
 		}
 		this->datas.push_back(rowData);
 	}
