@@ -3,6 +3,7 @@ namespace fastIO
 	const int BUF_SIZE = 100000;
 	const int OUT_SIZE = 100000;
 	using ll = long long;
+	bool open_success = false;
 	class IN
 	{
 	public:
@@ -10,9 +11,11 @@ namespace fastIO
 		IN(std::string path)
 		{
 			fp = fopen(path.c_str(), "r");
+            open_success = (fp==NULL? false:true);
 		}
 		~IN()
 		{
+		    if(open_success)
 			fclose(fp);
 		}
 		//fread->read

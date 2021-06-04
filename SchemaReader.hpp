@@ -391,14 +391,14 @@ struct ColumnInfo
 			 YYYY-MM-DD HH:MM:SS.xx 注意 小数点后多一个数据
 			 1000-01-01 00:00:00.0
 			*/
-			/*
-			std::string regex_template("\\d{4}[-]\\d{2}[-]\\d{2}[ ]\\d{2}[:]\\d{2}[:]\\d{2}[.]\\d{1,3}");
+
+			/*std::string regex_template("\\d{4}[-]\\d{2}[-]\\d{2}[ ]\\d{2}[:]\\d{2}[:]\\d{2}[.]\\d{1,3}");
 			std::regex pattern(regex_template, std::regex::icase);
 			std::match_results<std::string::const_iterator> result;
 
 			if (std::regex_match(data, result, pattern))
 				return data;
-			*/
+            return "2020-04-01 00:00:00.0";*/
 			for (auto &c : data)
 			{
 				if (c <= '9' && c >= '0')
