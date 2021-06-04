@@ -19,7 +19,7 @@ namespace fastIO
 		bool IOerror = 0;
 		inline char nc()
 		{
-			static char buf[BUF_SIZE], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
+			static char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
 			if (p1 == pend)
 			{
 				p1 = buf;

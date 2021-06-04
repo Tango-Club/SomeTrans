@@ -98,13 +98,14 @@ public:
 		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
 		std::cout << "path: " << path << std::endl;
 
-		std::shared_ptr<fastIO::IN> sourceDataPtr = std::make_shared<fastIO::IN>(path);
 		std::ifstream sourceData(path);
 		if (!sourceData.is_open())
 		{
-			std::cout << "not found: sourceData " + std::to_string(dataNumber) << std::endl;
+			std::cout << "not found: sourceData " << dataNumber << std::endl;
 			return false;
 		}
+		std::shared_ptr<fastIO::IN> sourceDataPtr = std::make_shared<fastIO::IN>(path);
+
 		int p = 1;
 		while (true)
 		{
