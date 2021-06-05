@@ -21,6 +21,7 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include <folly/FBString.h>
 
 #include "FastIO.hpp"
 #include "SchemaReader.hpp"
@@ -28,143 +29,144 @@
  * @author dts，just for demo.
  * @author pxl, fuck demo.
  */
-const std::string DATABASE_NAME = "tianchi_dts_data";														// 待处理数据库名，无需修改
-const std::string SCHEMA_FILE_DIR = "schema_info_dir";														// schema文件夹，无需修改。
-const std::string SCHEMA_FILE_NAME = "schema.info";															// schema文件名，无需修改。
-const std::string SOURCE_FILE_DIR = "source_file_dir";														// 输入文件夹，无需修改。
-const std::string SINK_FILE_DIR = "sink_file_dir";															// 输出文件夹，无需修改。
-const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";									// 输入文件名，无需修改。
-const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";										// 输出文件名模板，无需修改。
-const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
+const folly::fbstring DATABASE_NAME = "tianchi_dts_data";                                                       // 待处理数据库名，无需修改
+const folly::fbstring SCHEMA_FILE_DIR = "schema_info_dir";                                                      // schema文件夹，无需修改。
+const folly::fbstring SCHEMA_FILE_NAME = "schema.info";                                                         // schema文件名，无需修改。
+const folly::fbstring SOURCE_FILE_DIR = "source_file_dir";                                                      // 输入文件夹，无需修改。
+const folly::fbstring SINK_FILE_DIR = "sink_file_dir";                                                          // 输出文件夹，无需修改。
+const folly::fbstring SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";                                   // 输入文件名，无需修改。
+const folly::fbstring SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";                                       // 输出文件名模板，无需修改。
+const folly::fbstring CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
 
 time_t getTime()
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
-void splitStr(const std::string &str, std::vector<std::string> &tokens)
+void splitStr(const folly::fbstring &str, std::vector<folly::fbstring> &tokens)
 {
-	std::string tmp;
-	for (char c : str)
-	{
-		if (c == '	')
-		{
-			std::string tmpM;
-			swap(tmp, tmpM);
-			tokens.push_back(std::move(tmpM));
-		}
-		else
-			tmp.push_back(c);
-	}
-	if (tmp.length())
-		tokens.push_back(std::move(tmp));
+    folly::fbstring tmp;
+    for (char c : str)
+    {
+        if (c == '	')
+        {
+            folly::fbstring tmpM;
+            swap(tmp, tmpM);
+            tokens.push_back(std::move(tmpM));
+        }
+        else
+            tmp.push_back(c);
+    }
+    if (tmp.length())
+        tokens.push_back(std::move(tmp));
 }
 class Demo
 {
 public:
-	std::string sourceDirectory;
-	std::string sinkDirectory;
-	std::unordered_map<std::string, TableInfo> tables;
+    folly::fbstring sourceDirectory;
+    folly::fbstring sinkDirectory;
+    std::unordered_map<folly::fbstring, TableInfo> tables;
 
 public:
-	bool initialSchemaInfo()
-	{
-		time_t startTime = getTime();
-		std::cout << "Read schema_info_dir/schema.info file and construct table in memory." << std::endl;
-		std::string path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
-		std::cout << "path: " << path << std::endl;
-		std::ifstream schemaInfo(path);
-		schemaInfo.tie(0);
-		if (!schemaInfo.is_open())
-		{
-			std::cout << "not found: schemaInfo" << std::endl;
-			return false;
-		}
-		while (schemaInfo.peek() != EOF)
-		{
-			TableInfo table(schemaInfo);
-			assert(table.tableName != "");
-			tables.insert({table.tableName, table});
-			std::cout << "read table:"
-					  << " " << table.tableName << " success." << std::endl;
-		}
-		time_t endTime = getTime();
-		std::cout << "initialSchemaInfo time use : " << endTime - startTime << std::endl;
-		return true;
-	}
-	bool loadSourceData(int dataNumber)
-	{
-		time_t startTime = getTime();
-		std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
-		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
-		std::cout << "path: " << path << std::endl;
+    bool initialSchemaInfo()
+    {
+        time_t startTime = getTime();
+        std::cout << "Read schema_info_dir/schema.info file and construct table in memory." << std::endl;
+        folly::fbstring path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
+        std::cout << "path: " << path << std::endl;
+        std::ifstream schemaInfo(path.toStdString());
+        schemaInfo.tie(0);
+        if (!schemaInfo.is_open())
+        {
+            std::cout << "not found: schemaInfo" << std::endl;
+            return false;
+        }
+        while (schemaInfo.peek() != EOF)
+        {
+            TableInfo table(schemaInfo);
+            assert(table.tableName != "");
+            tables.insert({table.tableName, table});
+            std::cout << "read table:"
+                      << " " << table.tableName << " success." << std::endl;
+        }
+        time_t endTime = getTime();
+        std::cout << "initialSchemaInfo time use : " << endTime - startTime << std::endl;
+        return true;
+    }
+    bool loadSourceData(int dataNumber)
+    {
+        time_t startTime = getTime();
+        std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
+        folly::fbstring path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE 
+        + folly::fbstring(std::to_string(dataNumber));
+        std::cout << "path: " << path << std::endl;
 
-		std::ifstream sourceData(path);
-		if (!sourceData.is_open())
-		{
-			std::cout << "not found: sourceData " << dataNumber << std::endl;
-			return false;
-		}
-		std::shared_ptr<fastIO::IN> sourceDataPtr = std::make_shared<fastIO::IN>(path);
+        std::ifstream sourceData(path.toStdString());
+        if (!sourceData.is_open())
+        {
+            std::cout << "not found: sourceData " << dataNumber << std::endl;
+            return false;
+        }
+        std::shared_ptr<fastIO::IN> sourceDataPtr = std::make_shared<fastIO::IN>(path);
 
-		int p = 1;
-		while (true)
-		{
-			std::string rowStr;
-			sourceDataPtr->readLine(rowStr);
-			if (sourceDataPtr->IOerror)
-				break;
-			std::vector<std::string> vecStr;
-			splitStr(rowStr, vecStr);
-			auto op = vecStr[0];
-			auto databaseName = vecStr[1];
-			auto tableName = vecStr[2];
+        int p = 1;
+        while (true)
+        {
+            folly::fbstring rowStr;
+            sourceDataPtr->readLine(rowStr);
+            if (sourceDataPtr->IOerror)
+                break;
+            std::vector<folly::fbstring> vecStr;
+            splitStr(rowStr, vecStr);
+            auto op = vecStr[0];
+            auto databaseName = vecStr[1];
+            auto tableName = vecStr[2];
 
-			if (op == "I")
-			{
-				if (!tables.count(tableName))
-				{
-					std::cout << p++ << "-"
-							  << "table: " + tableName + " not found" << std::endl;
-				}
-				tables.at(tableName).readRow(vecStr);
-				p++;
-			}
-			else
-			{
-				assert(0);
-			}
-		}
-		time_t endTime = getTime();
-		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
-		return true;
-	}
+            if (op == "I")
+            {
+                if (!tables.count(tableName))
+                {
+                    std::cout << p++ << "-"
+                              << "table: " + tableName + " not found" << std::endl;
+                }
+                tables.at(tableName).readRow(vecStr);
+                p++;
+            }
+            else
+            {
+                assert(0);
+            }
+        }
+        time_t endTime = getTime();
+        std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
+        return true;
+    }
 
-	void cleanData()
-	{
-		std::cout << "Clean and sort the source data." << std::endl;
-		return;
-	}
+    void cleanData()
+    {
+        std::cout << "Clean and sort the source data." << std::endl;
+        return;
+    }
 
-	void sinkData()
-	{
-		time_t startTime = getTime();
-		std::cout << "Sink the " << tables.size() << " tables." << std::endl;
-		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
-		std::cout << "path: " << path << std::endl;
-		for (auto &table : tables)
-		{
-			std::cout << "Sink the table: " << table.second.tableName << std::endl;
-			table.second.sink(path);
-		}
-		time_t endTime = getTime();
-		std::cout << "sinkData time use : " << endTime - startTime << std::endl;
-	}
+    void sinkData()
+    {
+        time_t startTime = getTime();
+        std::cout << "Sink the " << tables.size() << " tables." << std::endl;
+        folly::fbstring path = sinkDirectory + "/" + SINK_FILE_DIR;
+        std::cout << "path: " << path << std::endl;
+        for (auto &table : tables)
+        {
+            std::cout << "Sink the table: " << table.second.tableName << std::endl;
+            table.second.sink(path);
+        }
+        time_t endTime = getTime();
+        std::cout << "sinkData time use : " << endTime - startTime << std::endl;
+    }
 };
 
 /**
 Input: 
 1. Disordered source data (in SOURCE_FILE_DIR)
-2. Schema information (in std::string)
+2. Schema information (in folly::fbstring)
 
 Process:
     data clean: 
@@ -182,59 +184,60 @@ Output:
 **/
 int main(int argc, char *argv[])
 {
-	std::ios_base::sync_with_stdio(false);
-	time_t startTime = getTime();
-	std::shared_ptr<Demo> demo(new Demo());
+    std::ios_base::sync_with_stdio(false);
+    time_t startTime = getTime();
+    std::shared_ptr<Demo> demo(new Demo());
 
-	static struct option long_options[] = {
-		{"input_dir", required_argument, 0, 'i'},
-		{"output_dir", required_argument, 0, 'o'},
-		{"output_db_url", required_argument, 0, 'r'},
-		{"output_db_user", required_argument, 0, 'u'},
-		{"output_db_passwd", required_argument, 0, 'p'},
-		{0, 0, 0, 0}};
-	int opt_index;
-	int opt;
+    static struct option long_options[] = {
+        {"input_dir", required_argument, 0, 'i'},
+        {"output_dir", required_argument, 0, 'o'},
+        {"output_db_url", required_argument, 0, 'r'},
+        {"output_db_user", required_argument, 0, 'u'},
+        {"output_db_passwd", required_argument, 0, 'p'},
+        {0, 0, 0, 0}};
+    int opt_index;
+    int opt;
 
-	while (-1 != (opt = getopt_long(argc, argv, "", long_options, &opt_index)))
-	{
+    while (-1 != (opt = getopt_long(argc, argv, "", long_options, &opt_index)))
+    {
 
-		switch (opt)
-		{
-		case 'i':
-			demo->sourceDirectory = optarg;
-			break;
-		case 'o':
-			demo->sinkDirectory = optarg;
-			break;
-		}
-	}
+        switch (opt)
+        {
+        case 'i':
+            demo->sourceDirectory = optarg;
+            break;
+        case 'o':
+            demo->sinkDirectory = optarg;
+            break;
+        }
+    }
 
-	std::cout << "[Start]\tload schema information." << std::endl;
-	// load schema information.
-	demo->initialSchemaInfo();
-	std::cout << "[End]\tload schema information." << std::endl;
+    std::cout << "[Start]\tload schema information." << std::endl;
+    // load schema information.
+    demo->initialSchemaInfo();
+    std::cout << "[End]\tload schema information." << std::endl;
 
-	// load input Start file.
-	std::cout << "[Start]\tload input Start file." << std::endl;
-	int dataNumber = 1;
-	while (demo->loadSourceData(dataNumber))
-		dataNumber++;
-	std::cout << "[End]\tload input Start file." << std::endl;
+    // load input Start file.
+    std::cout << "[Start]\tload input Start file." << std::endl;
+    int dataNumber = 1;
+    while (demo->loadSourceData(dataNumber))
+        dataNumber++;
+    std::cout << "[End]\tload input Start file." << std::endl;
 
-	/*
+    /*
 	// data clean.
 	std::cout << "[Start]\tdata clean." << std::endl;
 	demo->cleanData();
 	std::cout << "[End]\tdata clean." << std::endl;
 	*/
 
-	// sink to target file
-	std::cout << "[Start]\tsink to target file." << std::endl;
-	demo->sinkData();
-	std::cout << "[End]\tsink to target file." << std::endl;
+    // sink to target file
+    std::cout << "[Start]\tsink to target file." << std::endl;
+    demo->sinkData();
 
-	time_t endTime = getTime();
-	std::cout << "All time use : " << endTime - startTime << std::endl;
-	return 0;
+    std::cout << "[End]\tsink to target file." << std::endl;
+
+    time_t endTime = getTime();
+    std::cout << "All time use : " << endTime - startTime << std::endl;
+    return 0;
 }
