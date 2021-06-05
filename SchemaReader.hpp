@@ -603,10 +603,6 @@ struct TableInfo
         {
             bool f = 1;
             size_t cNums = 0;
-            auto printvariant = [&](const auto &val)
-            {
-                dataSink.print(val);
-            };
             for (auto &value : row.RowValue)
             {
                 if (f)
@@ -616,9 +612,7 @@ struct TableInfo
                 if (auto pval = std::get_if<double>(&value))
                     dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
                 else
-                    std::visit(printvariant, value);
-                //else if (auto pval = std::get_if<float>(&value))
-                //    dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
+                    std::visit([&](const auto &val){dataSink.print(val);}, value);
                 cNums++;
             }
             rNums++;

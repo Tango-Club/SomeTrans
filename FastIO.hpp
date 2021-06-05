@@ -1,7 +1,7 @@
 namespace fastIO
 {
-	const int BUF_SIZE = 10000000;
-	const int OUT_SIZE = 10000000;
+	const int BUF_SIZE = 20000000;
+	const int OUT_SIZE = 20000000;
 	using ll = long long;
 	using ull = unsigned long long;
 	bool open_success = false;
@@ -170,16 +170,16 @@ namespace fastIO
 			if (open_success)
 				fclose(fp);
 		}
-		void print(int x) { Ostream.print(x); }
-		void print(char x) { Ostream.out(x); }
-		void print(ll x) { Ostream.print(x); }
-		void print(ull x) { Ostream.print(x); }
+		inline void print(int x) { Ostream.print(x); }
+		inline void print(char x) { Ostream.out(x); }
+		inline void print(ll x) { Ostream.print(x); }
+		inline void print(ull x) { Ostream.print(x); }
 
-		void print(double x, int y) { Ostream.print(x, y); }
-		void print(double x) { Ostream.print(x, 2); }
+		inline void print(double x, int y) { Ostream.print(x, y); }
+		inline void print(double x) { Ostream.print(x, 2); }
 
-		void print(char *s) { Ostream.print(s); }
-		void print(std::string s)
+		inline void print(char *s) { Ostream.print(s); }
+		inline void print(const std::string& s)
 		{
 			for (auto &c : s)
 				print(c);
