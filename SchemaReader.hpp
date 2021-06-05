@@ -598,8 +598,7 @@ struct TableInfo
 		}
 		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
-		std::ofstream dataSink(path);
-		dataSink.tie(0);
+		fastIO::OUT dataSink(path);
 		size_t rNums = 0;
 		for (auto &row : datas)
 		{
@@ -610,39 +609,24 @@ struct TableInfo
 				if (f)
 					f = 0;
 				else
-					dataSink << "	";
+					dataSink.print('	');
 				if (auto pval = std::get_if<std::string>(&value))
-					dataSink << *pval;
+					dataSink.print(*pval);
 				else if (auto pval = std::get_if<int>(&value))
-					dataSink << *pval;
+					dataSink.print(*pval);
 				else if (auto pval = std::get_if<double>(&value))
-				{
-					if (this->columns[cNums].columnDef.type == ValueType::Vdecimal)
-					{
-						double p = *pval;
-						if (p < 0)
-						{
-							p = -p;
-							dataSink << "-";
-						}
-						dataSink << std::setiosflags(std::ios::fixed)
-								 << std::setprecision(this->columns[cNums].columnDef.args[1]) << p + eps;
-						dataSink.unsetf(std::ios::adjustfield | std::ios::basefield | std::ios::floatfield);
-					}
-					else
-						dataSink << *pval;
-				}
+					dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
 				else if (auto pval = std::get_if<long long>(&value))
-					dataSink << *pval;
+					dataSink.print(*pval);
 				else if (auto pval = std::get_if<unsigned long long>(&value))
-					dataSink << *pval;
+					dataSink.print(*pval);
 				else if (auto pval = std::get_if<float>(&value))
-					dataSink << *pval;
+					dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
 				cNums++;
 			}
 			rNums++;
 			if (rNums != datas.size())
-				dataSink << std::endl;
+				dataSink.print('\n');
 		}
 		std::cout << "mkdir the path file: " << path << std::endl;
 	}
