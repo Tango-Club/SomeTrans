@@ -123,6 +123,7 @@ namespace fastIO
 							   100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
 			if (x < -1e-12)
 				out('-'), x = -x;
+			x += 1e-8;
 			x *= mul[y];
 			ll x1 = (ll)floor(x);
 			if (x - floor(x) >= 0.5)

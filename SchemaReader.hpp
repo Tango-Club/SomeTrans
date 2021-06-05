@@ -3,7 +3,6 @@
 #else
 #define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
 #endif
-const double eps = 1e-8;
 /*
 数据库定义
 */
