@@ -1,53 +1,53 @@
 namespace fastIO
 {
-	const int BUF_SIZE = 100000;
-	const int OUT_SIZE = 100000;
-	using ll = long long;
-	bool open_success = false;
-	class IN
-	{
-	public:
-		FILE *fp;
-		IN(std::string path)
-		{
-			fp = fopen(path.c_str(), "r");
-            open_success = (fp==NULL? false:true);
-		}
-		~IN()
-		{
-		    if(open_success)
-			fclose(fp);
-		}
-		//fread->read
-		bool IOerror = 0;
-		inline char nc()
-		{
-			static char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
-			if (p1 == pend)
-			{
-				p1 = buf;
-				pend = buf + fread(buf, 1, BUF_SIZE, fp);
-				if (pend == p1)
-				{
-					IOerror = 1;
-					return -1;
-				}
-			}
-			return *p1++;
-		}
-		inline bool isEnd(char ch) { return ch == '\r' || ch == '\n'; }
-		inline void readLine(std::string &s)
-		{
-			s.clear();
-			char ch = nc();
-			if (IOerror)
-				return;
-			for (; !isEnd(ch) && !IOerror; ch = nc())
-				s.push_back(ch);
-		}
-	};
-	//fwrite->write
-	/*
+  const int BUF_SIZE = 10000000;
+  const int OUT_SIZE = 10000000;
+  using ll = long long;
+  bool open_success = false;
+  class IN
+  {
+  public:
+    FILE *fp;
+    IN(std::string path)
+    {
+      fp = fopen(path.c_str(), "r");
+      open_success = (fp == NULL ? false : true);
+    }
+    ~IN()
+    {
+      if (open_success)
+        fclose(fp);
+    }
+    //fread->read
+    bool IOerror = 0;
+    inline char nc()
+    {
+      static char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
+      if (p1 == pend)
+      {
+        p1 = buf;
+        pend = buf + fread(buf, 1, BUF_SIZE, fp);
+        if (pend == p1)
+        {
+          IOerror = 1;
+          return -1;
+        }
+      }
+      return *p1++;
+    }
+    inline bool isEnd(char ch) { return ch == '\r' || ch == '\n'; }
+    inline void readLine(std::string &s)
+    {
+      s.clear();
+      char ch = nc();
+      if (IOerror)
+        return;
+      for (; !isEnd(ch) && !IOerror; ch = nc())
+        s.push_back(ch);
+    }
+  };
+  //fwrite->write
+  /*
 	struct Ostream_fwrite
 	{
 		char *buf, *p1, *pend;

@@ -43,20 +43,18 @@ time_t getTime()
 }
 void splitStr(const std::string &str, std::vector<std::string> &tokens)
 {
-	std::string tmp;
+	int pre = 0, now = 0;
 	for (char c : str)
 	{
+		now++;
 		if (c == '	')
 		{
-			std::string tmpM;
-			swap(tmp, tmpM);
-			tokens.push_back(std::move(tmpM));
+			tokens.push_back(str.substr(pre, now - pre - 1));
+			pre = now;
 		}
-		else
-			tmp.push_back(c);
 	}
-	if (tmp.length())
-		tokens.push_back(std::move(tmp));
+	if (pre < now)
+		tokens.push_back(str.substr(pre, now - pre));
 }
 class Demo
 {
@@ -115,17 +113,17 @@ public:
 				break;
 			std::vector<std::string> vecStr;
 			splitStr(rowStr, vecStr);
-			auto op = vecStr[0];
-			auto databaseName = vecStr[1];
-			auto tableName = vecStr[2];
+			auto &op = vecStr[0];
+			auto &tableName = vecStr[2];
 
 			if (op == "I")
 			{
+				/*
 				if (!tables.count(tableName))
 				{
 					std::cout << p++ << "-"
 							  << "table: " + tableName + " not found" << std::endl;
-				}
+				}*/
 				tables.at(tableName).readRow(vecStr);
 				p++;
 			}

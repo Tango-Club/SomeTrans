@@ -94,36 +94,24 @@ struct ColumnDefType
 };
 bool isInteger(const std::string &s)
 {
-	int cnt = 0;
-	for (auto &i : s)
-	{
-		if (cnt++ == 0)
-			if (i == '-' || i == '+')
-				continue;
-		if (!isdigit(i))
+	bool sign = (s[0] == '-');
+	for (int i = sign; i < s.length(); i++)
+		if (!isdigit(s[i]))
 			return false;
-	}
 	return true;
 }
 bool isDecimal(const std::string &s)
 {
-	int cnt = 0;
-	int cnt1 = 0;
-	for (auto &i : s)
-	{
-		if (cnt++ == 0)
-			if (i == '-' || i == '+')
-				continue;
-		if (i == '.')
+	bool sign = (s[0] == '-');
+	bool point = false;
+	for (int i = sign; i < s.length(); i++)
+		if (!isdigit(s[i]))
 		{
-			cnt1++;
-			if (cnt == 1 || cnt1 != 1)
+			if (s[i] == '.' && point == false)
+				point = true;
+			else
 				return false;
-			continue;
 		}
-		else if (!isdigit(i))
-			return false;
-	}
 	return true;
 }
 struct ColumnInfo
@@ -157,26 +145,19 @@ struct ColumnInfo
 			*/
 			if (!isInteger(data))
 				return 0;
-			try
+			int x = std::stoi(data);
+			if (!this->isUnsigned)
 			{
-				int x = std::stoi(data);
-				if (!this->isUnsigned)
-				{
-					if (x < -128 || x > 127)
-						return 0;
-					return x;
-				}
-				else
-				{
-					if (x < 0 || x > 255)
-						return 0;
-					return x;
-				}
+				if (x < -128 || x > 127)
+					return 0;
+				return x;
 			}
-			catch (const std::exception &e)
+			else
 			{
+				if (x < 0 || x > 255)
+					return 0;
+				return x;
 			}
-			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vsmallint)
 		{
@@ -187,26 +168,19 @@ struct ColumnInfo
 			*/
 			if (!isInteger(data))
 				return 0;
-			try
+			int x = std::stoi(data);
+			if (!this->isUnsigned)
 			{
-				int x = std::stoi(data);
-				if (!this->isUnsigned)
-				{
-					if (x < -32768 || x > 32767)
-						return 0;
-					return x;
-				}
-				else
-				{
-					if (x < 0 || x > 65535)
-						return 0;
-					return x;
-				}
+				if (x < -32768 || x > 32767)
+					return 0;
+				return x;
 			}
-			catch (const std::exception &e)
+			else
 			{
+				if (x < 0 || x > 65535)
+					return 0;
+				return x;
 			}
-			return 0;
 		}
 		/*
 		if (this->columnDef.type == ValueType::Vmediumint)
@@ -250,26 +224,20 @@ struct ColumnInfo
 			*/
 			if (!isInteger(data))
 				return 0;
-			try
+
+			long long x = std::stoll(data);
+			if (!this->isUnsigned)
 			{
-				long long x = std::stoll(data);
-				if (!this->isUnsigned)
-				{
-					if (x < -2147483648 || x > 2147483647)
-						return 0;
-					return x;
-				}
-				else
-				{
-					if (x < 0 || x > 4294967295)
-						return 0;
-					return x;
-				}
+				if (x < -2147483648 || x > 2147483647)
+					return 0;
+				return x;
 			}
-			catch (const std::exception &e)
+			else
 			{
+				if (x < 0 || x > 4294967295)
+					return 0;
+				return x;
 			}
-			return 0;
 		}
 		if (this->columnDef.type == ValueType::Vbigint)
 		{
@@ -344,14 +312,8 @@ struct ColumnInfo
 			*/
 			if (isDecimal(data))
 			{
-				try
-				{
-					double ret = std::stod(data);
-					return ret;
-				}
-				catch (const std::exception &)
-				{
-				}
+				double x = std::stod(data);
+				return x;
 			}
 			return 0;
 		}
@@ -425,16 +387,16 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			if (data.length() > this->length)
+				data = data.substr(0, this->length);
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vvarchar)
 		{
 			/*
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			if (data.length() > this->length)
+				data = data.substr(0, this->length);
 			return data;
 		}
 		/*
@@ -471,8 +433,8 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			while (data.length() > this->length)
-				data.pop_back();
+			if (data.length() > this->length)
+				data = data.substr(0, this->length);
 			return data;
 		}
 		/*
@@ -670,11 +632,11 @@ struct TableInfo
 					else
 						dataSink << *pval;
 				}
-				else if (auto pval = std::get_if<float>(&value))
-					dataSink << *pval;
 				else if (auto pval = std::get_if<long long>(&value))
 					dataSink << *pval;
 				else if (auto pval = std::get_if<unsigned long long>(&value))
+					dataSink << *pval;
+				else if (auto pval = std::get_if<float>(&value))
 					dataSink << *pval;
 				cNums++;
 			}
