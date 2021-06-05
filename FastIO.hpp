@@ -176,6 +176,8 @@ namespace fastIO
 		void print(ull x) { Ostream.print(x); }
 
 		void print(double x, int y) { Ostream.print(x, y); }
+		void print(double x) { Ostream.print(x, 2); }
+
 		void print(char *s) { Ostream.print(s); }
 		void print(std::string s)
 		{
