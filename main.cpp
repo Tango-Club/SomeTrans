@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <queue>
 #include <thread>
 #include <algorithm>
 #include <chrono>
@@ -23,6 +24,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#include "utils.hpp"
 #include "FastIO.hpp"
 #include "SchemaReader.hpp"
 /**
@@ -38,25 +40,6 @@ const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";							
 const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";										// 输出文件名模板，无需修改。
 const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
 
-time_t getTime()
-{
-	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-}
-void splitStr(const std::string &str, std::vector<std::string> &tokens)
-{
-	int pre = 0, now = 0;
-	for (char c : str)
-	{
-		now++;
-		if (c == '	')
-		{
-			tokens.push_back(str.substr(pre, now - pre - 1));
-			pre = now;
-		}
-	}
-	if (pre < now)
-		tokens.push_back(str.substr(pre, now - pre));
-}
 class Demo
 {
 public:
@@ -108,8 +91,7 @@ public:
 		int p = 1;
 		while (true)
 		{
-			std::string rowStr;
-			sourceDataPtr->readLine(rowStr);
+			std::string rowStr=sourceDataPtr->readLine();
 			if (sourceDataPtr->IOerror)
 				break;
 			std::vector<std::string> vecStr;
@@ -150,17 +132,11 @@ public:
 		std::cout << "Sink the " << tables.size() << " tables." << std::endl;
 		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
 		std::cout << "path: " << path << std::endl;
-        DIR *mydir = nullptr;
-        if ((mydir = opendir(path.c_str())) == nullptr) //判断目录
-        {
-            std::cout << "mkdir the path: " << path << std::endl;
-            MKDIR(path.c_str()); //创建目录
-        }
         std::vector<std::thread> threads;
         for (auto &table : tables)
 		{
 			std::cout << "Creat thread to sink the table: " << table.second.tableName << std::endl;
-            threads.emplace_back(std::thread([&](std::string path){table.second.sink(path);},path));
+            threads.emplace_back([&](std::string path){table.second.sink(path);},path);
 		}
 		for (auto &tableThread : threads)
 		{
@@ -192,7 +168,6 @@ Output:
 **/
 int main(int argc, char *argv[])
 {
-	std::ios_base::sync_with_stdio(false);
 	time_t startTime = getTime();
 	std::shared_ptr<Demo> demo(new Demo());
 

@@ -40,14 +40,15 @@ namespace fastIO
 			return *p1++;
 		}
 		inline bool isEnd(char ch) { return ch == '\r' || ch == '\n'; }
-		inline void readLine(std::string &s)
+		inline std::string readLine()
 		{
-			s.clear();
+            std::string s;
 			char ch = nc();
 			if (IOerror)
-				return;
+				return s;
 			for (; !isEnd(ch) && !IOerror; ch = nc())
 				s.push_back(ch);
+            return s;
 		}
 	};
 	//fwrite->write
