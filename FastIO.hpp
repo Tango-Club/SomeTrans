@@ -1,13 +1,17 @@
 namespace fastIO
 {
-	const int BUF_SIZE = 1000000;
-	const int OUT_SIZE = 1000000;
-	using ll = long long;
+    using ll = long long;
 	using ull = unsigned long long;
+	constexpr int BUF_SIZE = 1000000;
+	constexpr int OUT_SIZE = 1000000;
+    constexpr ll mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+                    1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
+                    100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
 	bool open_success = false;
 	class IN
 	{
 	public:
+        char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
 		FILE *fp;
 		IN(std::string path)
 		{
@@ -23,7 +27,6 @@ namespace fastIO
 		bool IOerror = 0;
 		inline char nc()
 		{
-			static char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
 			if (p1 == pend)
 			{
 				p1 = buf;
@@ -51,6 +54,7 @@ namespace fastIO
 
 	struct Ostream_fwrite
 	{
+        char s[15], *s1;
 		char *buf, *p1, *pend;
 		FILE *fp;
 		Ostream_fwrite()
@@ -70,7 +74,6 @@ namespace fastIO
 		}
 		void print(int x)
 		{
-			static char s[15], *s1;
 			s1 = s;
 			if (!x)
 				*s1++ = '0';
@@ -83,7 +86,6 @@ namespace fastIO
 		}
 		void print(unsigned int x)
 		{
-			static char s[15], *s1;
 			s1 = s;
 			if (!x)
 				*s1++ = '0';
@@ -94,7 +96,6 @@ namespace fastIO
 		}
 		void print(ll x)
 		{
-			static char s[25], *s1;
 			s1 = s;
 			if (!x)
 				*s1++ = '0';
@@ -107,7 +108,6 @@ namespace fastIO
 		}
 		void print(ull x)
 		{
-			static char s[25], *s1;
 			s1 = s;
 			if (!x)
 				*s1++ = '0';
@@ -118,9 +118,6 @@ namespace fastIO
 		}
 		void print(double x, int y)
 		{
-			static ll mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
-							   1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
-							   100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
 			if (x < -1e-12)
 				out('-'), x = -x;
 			x += 1e-8;
