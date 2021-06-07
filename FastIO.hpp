@@ -1,7 +1,7 @@
 namespace fastIO
 {
-	const int BUF_SIZE = 20000000;
-	const int OUT_SIZE = 20000000;
+	const int BUF_SIZE = 1000000;
+	const int OUT_SIZE = 1000000;
 	using ll = long long;
 	using ull = unsigned long long;
 	bool open_success = false;

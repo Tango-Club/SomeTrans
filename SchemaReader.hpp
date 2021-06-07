@@ -589,12 +589,6 @@ struct TableInfo
     void sink(std::string path)
     {
         this->sortDatas();
-        DIR *mydir = nullptr;
-        if ((mydir = opendir(path.c_str())) == nullptr) //判断目录
-        {
-            std::cout << "mkdir the path: " << path << std::endl;
-            MKDIR(path.c_str()); //创建目录
-        }
         path += "/tianchi_dts_sink_data_" + this->tableName;
         remove(path.c_str());
         fastIO::OUT dataSink(path);

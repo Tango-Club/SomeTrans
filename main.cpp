@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <thread>
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -149,10 +150,21 @@ public:
 		std::cout << "Sink the " << tables.size() << " tables." << std::endl;
 		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
 		std::cout << "path: " << path << std::endl;
-		for (auto &table : tables)
+        DIR *mydir = nullptr;
+        if ((mydir = opendir(path.c_str())) == nullptr) //判断目录
+        {
+            std::cout << "mkdir the path: " << path << std::endl;
+            MKDIR(path.c_str()); //创建目录
+        }
+        std::vector<std::thread> threads;
+        for (auto &table : tables)
 		{
-			std::cout << "Sink the table: " << table.second.tableName << std::endl;
-			table.second.sink(path);
+			std::cout << "Creat thread to sink the table: " << table.second.tableName << std::endl;
+            threads.emplace_back(std::thread([&](std::string path){table.second.sink(path);},path));
+		}
+		for (auto &tableThread : threads)
+		{
+            tableThread.join();
 		}
 		time_t endTime = getTime();
 		std::cout << "sinkData time use : " << endTime - startTime << std::endl;
