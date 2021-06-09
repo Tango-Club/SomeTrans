@@ -80,6 +80,10 @@ public:
 		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
 		std::cout << "path: " << path << std::endl;
 
+		std::string sinkPath = sinkDirectory + "/" + SINK_FILE_DIR;
+		if (opendir(sinkPath.c_str()) == NULL)
+			MKDIR(sinkPath.c_str());
+
 		std::ifstream sourceData(path);
 		if (!sourceData.is_open())
 		{
@@ -94,10 +98,11 @@ public:
 
 		parallelReadRow::RowConsumer consumer1(tables, sinkDirectory);
 		parallelReadRow::RowConsumer consumer2(tables, sinkDirectory);
-		parallelReadRow::RowConsumer consumer3(tables, sinkDirectory);
+		//parallelReadRow::RowConsumer consumer3(tables, sinkDirectory);
 		threads.emplace_back([&]()
 							 { consumer1.loop(); });
-		//threads.emplace_back([&](){ consumer1.loop(); });
+		threads.emplace_back([&]()
+							 { consumer1.loop(); });
 		//threads.emplace_back([&](){ consumer1.loop(); });
 
 		for (auto &tableThread : threads)

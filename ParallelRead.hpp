@@ -67,20 +67,12 @@ namespace parallelReadRow
 		}
 		void sinkData()
 		{
-			std::cout << sinkCounter << " : Sink the " << tables.size() << " tables." << std::endl;
-			std::string path = sinkDirectory + "/" + SINK_FILE_DIR + "/" + std::to_string(sinkCounter);
-			sinkCounter++;
+			std::string path = sinkDirectory + "/" + SINK_FILE_DIR + "/" + std::to_string(sinkCounter++);
+			if (opendir(path.c_str()) == NULL)
+				MKDIR(path.c_str());
 			std::cout << "path: " << path << std::endl;
-			std::vector<std::thread> threads;
 			for (auto &table : tables)
-			{
-				std::cout << "Creat thread to sink the table: " << table.second.tableName << std::endl;
-				threads.emplace_back([&](std::string path)
-									 { table.second.sink(path); },
-									 path);
-			}
-			for (auto &tableThread : threads)
-				tableThread.join();
+				table.second.sink(path);
 		}
 		void loop()
 		{

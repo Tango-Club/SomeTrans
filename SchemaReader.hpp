@@ -1,8 +1,3 @@
-#ifdef _WIN32
-#define MKDIR(a) mkdir((a))
-#else
-#define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
-#endif
 /*
 数据库定义
 */
