@@ -20,9 +20,7 @@ namespace parallelReadRow
 				return;
 			while (!rowQue.try_enqueue(rowStr))
 			{
-				//std::cout << "try to enqueue" << std::endl;
 			}
-			//std::cout << "in " << rowStr << std::endl;
 		}
 		void loop()
 		{
@@ -50,7 +48,6 @@ namespace parallelReadRow
 			}
 			if (!rowStr.length())
 				return false;
-			//std::cout << "out " << rowStr << std::endl;
 			std::vector<std::string> vecStr;
 			splitStr(rowStr, vecStr);
 			auto &op = vecStr[0];
@@ -70,7 +67,6 @@ namespace parallelReadRow
 			std::string path = sinkDirectory + "/" + SINK_FILE_DIR + "/" + std::to_string(sinkCounter++);
 			if (opendir(path.c_str()) == NULL)
 				MKDIR(path.c_str());
-			std::cout << "path: " << path << std::endl;
 			for (auto &table : tables)
 				table.second.sink(path);
 		}

@@ -621,6 +621,6 @@ struct TableInfo
 			if (rNums != datas.size())
 				dataSink.print('\n');
 		}
-		std::cout << "mkdir the path file: " << path << std::endl;
+		//std::cout << "mkdir the path file: " << path << std::endl;
 	}
 };

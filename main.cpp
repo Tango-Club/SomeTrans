@@ -96,14 +96,13 @@ public:
 		threads.emplace_back([&]()
 							 { producter.loop(); });
 
-		parallelReadRow::RowConsumer consumer1(tables, sinkDirectory);
-		parallelReadRow::RowConsumer consumer2(tables, sinkDirectory);
-		//parallelReadRow::RowConsumer consumer3(tables, sinkDirectory);
-		threads.emplace_back([&]()
-							 { consumer1.loop(); });
-		threads.emplace_back([&]()
-							 { consumer1.loop(); });
-		//threads.emplace_back([&](){ consumer1.loop(); });
+		std::vector<parallelReadRow::RowConsumer> consumers;
+		for (int i = 1; i <= 7; i++)
+			consumers.emplace_back(tables, sinkDirectory);
+
+		for (auto &consumer : consumers)
+			threads.emplace_back([&]()
+								 { consumer.loop(); });
 
 		for (auto &tableThread : threads)
 			tableThread.join();
