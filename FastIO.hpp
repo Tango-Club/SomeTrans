@@ -1,17 +1,17 @@
 namespace fastIO
 {
-    using ll = long long;
+	using ll = long long;
 	using ull = unsigned long long;
 	constexpr int BUF_SIZE = 1000000;
 	constexpr int OUT_SIZE = 1000000;
-    constexpr ll mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
-                    1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
-                    100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
+	constexpr ll mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+						  1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
+						  100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
 	bool open_success = false;
 	class IN
 	{
 	public:
-        char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
+		char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
 		FILE *fp;
 		IN(std::string path)
 		{
@@ -42,20 +42,20 @@ namespace fastIO
 		inline bool isEnd(char ch) { return ch == '\r' || ch == '\n'; }
 		inline std::string readLine()
 		{
-            std::string s;
+			std::string s;
 			char ch = nc();
 			if (IOerror)
 				return s;
 			for (; !isEnd(ch) && !IOerror; ch = nc())
 				s.push_back(ch);
-            return s;
+			return s;
 		}
 	};
 	//fwrite->write
 
 	struct Ostream_fwrite
 	{
-        char s[15], *s1;
+		char s[15], *s1;
 		char *buf, *p1, *pend;
 		FILE *fp;
 		Ostream_fwrite()
@@ -177,7 +177,7 @@ namespace fastIO
 		inline void print(double x) { Ostream.print(x, 2); }
 
 		inline void print(char *s) { Ostream.print(s); }
-		inline void print(const std::string& s)
+		inline void print(const std::string &s)
 		{
 			for (auto &c : s)
 				print(c);

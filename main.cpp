@@ -6,39 +6,40 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <queue>
-#include <thread>
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
+#include <queue>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <unordered_set>
 #include <variant>
 #include <vector>
 
+#include "concurrentqueue.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
 #include "utils.hpp"
+
 #include "FastIO.hpp"
+
 #include "SchemaReader.hpp"
+
+#include "ParallelRead.hpp"
+
 /**
  * @author dts，just for demo.
  * @author pxl, fuck demo.
  */
-const std::string DATABASE_NAME = "tianchi_dts_data";														// 待处理数据库名，无需修改
-const std::string SCHEMA_FILE_DIR = "schema_info_dir";														// schema文件夹，无需修改。
-const std::string SCHEMA_FILE_NAME = "schema.info";															// schema文件名，无需修改。
-const std::string SOURCE_FILE_DIR = "source_file_dir";														// 输入文件夹，无需修改。
-const std::string SINK_FILE_DIR = "sink_file_dir";															// 输出文件夹，无需修改。
-const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";									// 输入文件名，无需修改。
-const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";										// 输出文件名模板，无需修改。
-const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
 
 class Demo
 {
@@ -55,7 +56,6 @@ public:
 		std::string path = sourceDirectory + "/" + SCHEMA_FILE_DIR + "/" + SCHEMA_FILE_NAME;
 		std::cout << "path: " << path << std::endl;
 		std::ifstream schemaInfo(path);
-		schemaInfo.tie(0);
 		if (!schemaInfo.is_open())
 		{
 			std::cout << "not found: schemaInfo" << std::endl;
@@ -86,64 +86,25 @@ public:
 			std::cout << "not found: sourceData " << dataNumber << std::endl;
 			return false;
 		}
-		std::shared_ptr<fastIO::IN> sourceDataPtr = std::make_shared<fastIO::IN>(path);
+		std::vector<std::thread> threads;
 
-		int p = 1;
-		while (true)
-		{
-			std::string rowStr=sourceDataPtr->readLine();
-			if (sourceDataPtr->IOerror)
-				break;
-			std::vector<std::string> vecStr;
-			splitStr(rowStr, vecStr);
-			auto &op = vecStr[0];
-			auto &tableName = vecStr[2];
+		parallelReadRow::RowProducter producter(path, sourceDirectory);
+		threads.emplace_back([&]()
+							 { producter.loop(); });
 
-			if (op == "I")
-			{
-				/*
-				if (!tables.count(tableName))
-				{
-					std::cout << p++ << "-"
-							  << "table: " + tableName + " not found" << std::endl;
-				}*/
-				tables.at(tableName).readRow(vecStr);
-				p++;
-			}
-			else
-			{
-				assert(0);
-			}
-		}
+		parallelReadRow::RowConsumer consumer1(tables, sinkDirectory);
+		parallelReadRow::RowConsumer consumer2(tables, sinkDirectory);
+		parallelReadRow::RowConsumer consumer3(tables, sinkDirectory);
+		threads.emplace_back([&]()
+							 { consumer1.loop(); });
+		//threads.emplace_back([&](){ consumer1.loop(); });
+		//threads.emplace_back([&](){ consumer1.loop(); });
+
+		for (auto &tableThread : threads)
+			tableThread.join();
 		time_t endTime = getTime();
 		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
 		return true;
-	}
-
-	void cleanData()
-	{
-		std::cout << "Clean and sort the source data." << std::endl;
-		return;
-	}
-
-	void sinkData()
-	{
-		time_t startTime = getTime();
-		std::cout << "Sink the " << tables.size() << " tables." << std::endl;
-		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
-		std::cout << "path: " << path << std::endl;
-        std::vector<std::thread> threads;
-        for (auto &table : tables)
-		{
-			std::cout << "Creat thread to sink the table: " << table.second.tableName << std::endl;
-            threads.emplace_back([&](std::string path){table.second.sink(path);},path);
-		}
-		for (auto &tableThread : threads)
-		{
-            tableThread.join();
-		}
-		time_t endTime = getTime();
-		std::cout << "sinkData time use : " << endTime - startTime << std::endl;
 	}
 };
 
@@ -206,18 +167,6 @@ int main(int argc, char *argv[])
 	while (demo->loadSourceData(dataNumber))
 		dataNumber++;
 	std::cout << "[End]\tload input Start file." << std::endl;
-
-	/*
-	// data clean.
-	std::cout << "[Start]\tdata clean." << std::endl;
-	demo->cleanData();
-	std::cout << "[End]\tdata clean." << std::endl;
-	*/
-
-	// sink to target file
-	std::cout << "[Start]\tsink to target file." << std::endl;
-	demo->sinkData();
-	std::cout << "[End]\tsink to target file." << std::endl;
 
 	time_t endTime = getTime();
 	std::cout << "All time use : " << endTime - startTime << std::endl;
