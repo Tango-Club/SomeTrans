@@ -2,7 +2,7 @@ namespace parallelReadRow
 {
 	std::atomic<bool> aliveProducter;
 	std::queue<std::string> rowQueue;
-	moodycamel::ConcurrentQueue<std::string> rowQue(1000000);
+	moodycamel::ConcurrentQueue<std::string> rowQue(100000);
 	std::atomic<int> sinkCounter = 0;
 	class RowProducter
 	{
@@ -67,8 +67,15 @@ namespace parallelReadRow
 			std::string path = sinkDirectory + "/" + SINK_FILE_DIR + "/" + std::to_string(sinkCounter++);
 			if (opendir(path.c_str()) == NULL)
 				MKDIR(path.c_str());
+			std::vector<std::thread> threads;
 			for (auto &table : tables)
-				table.second.sink(path);
+			{
+				threads.emplace_back([&](std::string path)
+									 { table.second.sink(path); },
+									 path);
+			}
+			for (auto &tableThread : threads)
+				tableThread.join();
 		}
 		void loop()
 		{

@@ -97,7 +97,7 @@ public:
 							 { producter.loop(); });
 
 		std::vector<parallelReadRow::RowConsumer> consumers;
-		for (int i = 1; i <= 7; i++)
+		for (int i = 1; i <= 3; i++)
 			consumers.emplace_back(tables, sinkDirectory);
 
 		for (auto &consumer : consumers)
@@ -109,6 +109,26 @@ public:
 		time_t endTime = getTime();
 		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
 		return true;
+	}
+	void mergeData()
+	{
+		time_t startTime = getTime();
+		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
+		if (opendir(path.c_str()) == NULL)
+			MKDIR(path.c_str());
+		/*
+		std::vector<std::thread> threads;
+		for (auto &table : tables)
+			threads.emplace_back([&](std::string path)
+								 { table.second.finalSink(path); },
+								 path);
+		for (auto &tableThread : threads)
+			tableThread.join();
+		*/
+		for (auto &table : tables)
+			table.second.finalSink(path);
+		time_t endTime = getTime();
+		std::cout << "mergeData time use : " << endTime - startTime << std::endl;
 	}
 };
 
@@ -171,6 +191,11 @@ int main(int argc, char *argv[])
 	while (demo->loadSourceData(dataNumber))
 		dataNumber++;
 	std::cout << "[End]\tload input Start file." << std::endl;
+
+	std::cout << "[Start]\tmerge data file." << std::endl;
+	// load schema information.
+	demo->mergeData();
+	std::cout << "[End]\tmerge data file." << std::endl;
 
 	time_t endTime = getTime();
 	std::cout << "All time use : " << endTime - startTime << std::endl;

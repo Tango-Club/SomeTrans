@@ -82,7 +82,6 @@ struct ColumnDefType
 		}
 		if (pre == 0)
 			typeName = typeStr;
-		//assert(TypeMP.count(typeName) != 0);
 		this->type = TypeMP.at(typeName);
 	}
 };
@@ -483,6 +482,116 @@ struct ColumnInfo
 		//文本 超长字符长度
 		return 0;
 	}
+	std::variant<int, long long, unsigned long long, std::string, double> readColLow(std::string &data)
+	{
+		if (this->columnDef.type == ValueType::Vtinyint)
+		{
+			/*
+			int
+			Signed [-128,127]
+			Unsigned [0,255]
+			*/
+			if (!isInteger(data))
+				return 0;
+			if (!this->isUnsigned)
+			{
+				int x = std::stoi(data);
+				if (x > 127 || x < -128)
+					return 0;
+				return x;
+			}
+			else
+			{
+				if (data[0] == '-')
+					return 0;
+				int x = std::stoi(data);
+				if (x > 255)
+					return 0;
+				return x;
+			}
+		}
+		if (this->columnDef.type == ValueType::Vsmallint)
+		{
+			/*
+			int
+			Signed [-32768,32767]
+			Unsigned [0,65535]
+			*/
+			if (!isInteger(data))
+				return 0;
+			if (!this->isUnsigned)
+			{
+				int x = std::stoi(data);
+				if (x > 32767 || x < -32768)
+					return 0;
+				return x;
+			}
+			else
+			{
+				int x = std::stoi(data);
+				if (data[0] == '-')
+					return 0;
+				if (x > 65535)
+					return 0;
+				return x;
+			}
+		}
+		if (this->columnDef.type == ValueType::Vint)
+		{
+			/*
+			long long
+			Signed [-2147483648,2147483647]
+			Unsigned [0,4294967295]
+			*/
+			if (!isInteger(data))
+				return 0;
+
+			if (!this->isUnsigned)
+			{
+				long long x = std::stoll(data);
+				if (x > 2147483647 || x < -2147483648)
+					return 0;
+				return x;
+			}
+			else
+			{
+				if (data[0] == '-')
+					return 0;
+				long long x = std::stoll(data);
+				if (x > 4294967295)
+					return 0;
+				return x;
+			}
+		}
+		if (this->columnDef.type == ValueType::Vbigint)
+		{
+			/*
+			ll/ull
+			Signed [-9223372036854775808,9223372036854775807]
+			Unsigned [0,18446744073709551615]
+			*/
+			if (!isInteger(data))
+				return 0;
+			try
+			{
+				if (!this->isUnsigned)
+				{
+					long long x = std::stoll(data);
+					return x;
+				}
+				else
+				{
+					unsigned long long x = std::stoull(data);
+					return x;
+				}
+			}
+			catch (const std::exception &)
+			{
+			}
+			return 0;
+		}
+		return data;
+	}
 };
 struct IndexInfo
 { //索引声明
@@ -509,7 +618,7 @@ struct RowDataCmp
 {
 	const std::vector<PrimeKeyInfo> &primeKeys;
 	RowDataCmp(const std::vector<PrimeKeyInfo> &keys) : primeKeys(keys) {}
-	bool operator()(const RowData &lhs, const RowData &rhs)
+	bool operator()(const RowData &lhs, const RowData &rhs) const
 	{
 		for (auto &primeKey : this->primeKeys)
 		{
@@ -523,7 +632,7 @@ struct RowDataEqual
 {
 	const std::vector<PrimeKeyInfo> &primeKeys;
 	RowDataEqual(const std::vector<PrimeKeyInfo> &keys) : primeKeys(keys) {}
-	bool operator()(const RowData &lhs, const RowData &rhs)
+	bool operator()(const RowData &lhs, const RowData &rhs) const
 	{
 		for (auto &primeKey : this->primeKeys)
 		{
@@ -531,6 +640,15 @@ struct RowDataEqual
 				return false;
 		}
 		return true;
+	}
+};
+struct PairRowDataCmp
+{
+	RowDataCmp cmp;
+	PairRowDataCmp(const std::vector<PrimeKeyInfo> &keys) : cmp(keys) {}
+	bool operator()(const std::pair<RowData, fastIO::IN &> &lhs, const std::pair<RowData, fastIO::IN> &rhs) const
+	{
+		return cmp(lhs.first, rhs.first);
 	}
 };
 struct TableInfo
@@ -582,10 +700,20 @@ struct TableInfo
 	{
 		RowData rowData;
 		for (size_t i = 0; i < columns.size(); i++)
-		{
 			rowData.RowValue.emplace_back(columns[i].readCol(vecStr[i + 3]));
-		}
 		this->datas.emplace_back(rowData);
+	}
+	RowData readRowLow(std::string rowStr)
+	{
+		std::vector<std::string> vecStr;
+		splitStr(rowStr, vecStr);
+		RowData rowData;
+		printf("%d %d\n", vecStr.size(), columns.size());
+		printf("[%s]\n", rowStr.c_str());
+		for (size_t i = 0; i < columns.size(); i++)
+			rowData.RowValue.emplace_back(columns[i].readColLow(vecStr[i]));
+		printf("%d-----\n", rowData.RowValue.size());
+		return rowData;
 	}
 	void sortDatas()
 	{
@@ -622,5 +750,79 @@ struct TableInfo
 				dataSink.print('\n');
 		}
 		//std::cout << "mkdir the path file: " << path << std::endl;
+	}
+	void sink(RowData &row, fastIO::OUT &dataSink, bool &isFirst)
+	{
+		if (!isFirst)
+			dataSink.print('\n');
+		else
+			isFirst = false;
+		bool f = 1;
+		size_t cNums = 0;
+		for (auto &value : row.RowValue)
+		{
+			if (f)
+				f = 0;
+			else
+				dataSink.print('	');
+			if (auto pval = std::get_if<double>(&value))
+				dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
+			else
+				std::visit([&](const auto &val)
+						   { dataSink.print(val); },
+						   value);
+			cNums++;
+		}
+	}
+	void merge(std::vector<std::string> filePaths, std::string outPath)
+	{
+		std::priority_queue<std::pair<RowData, fastIO::IN &>, std::vector<std::pair<RowData, fastIO::IN &>>,
+							PairRowDataCmp>
+			q{PairRowDataCmp(primeKeys)};
+		std::vector<fastIO::IN> files;
+		for (auto &path : filePaths)
+		{
+			files.emplace_back(path);
+			std::string rowStr = files.back().readLine();
+			if (rowStr == "")
+				continue;
+			q.push({readRowLow(rowStr), files.back()});
+		}
+		printf("---\n");
+		fastIO::OUT outFile(outPath);
+		bool isFirst = true;
+		std::shared_ptr<RowData> last = nullptr;
+		auto equal = RowDataEqual(primeKeys);
+		while (true)
+		{
+			auto top = q.top();
+			q.pop();
+			std::string rowStr = top.second.readLine();
+			if (last == nullptr || !equal(*last, top.first))
+			{
+				sink(top.first, outFile, isFirst);
+				last = std::make_shared<RowData>(top.first);
+			}
+			if (rowStr == "")
+			{
+				if (q.empty())
+					break;
+				continue;
+			}
+			top.first = readRowLow(rowStr);
+			q.push(top);
+		}
+	}
+	void finalSink(std::string path)
+	{
+		std::vector<std::string> filePaths;
+		for (int i = 0; true; i++)
+		{
+			std::string filePath = path + "/" + std::to_string(i) + "/" + SINK_FILE_NAME_TEMPLATE + tableName;
+			if (!std::ifstream(filePath).is_open())
+				break;
+			filePaths.push_back(filePath);
+		}
+		merge(filePaths, path + "/" + SINK_FILE_NAME_TEMPLATE + tableName);
 	}
 };
