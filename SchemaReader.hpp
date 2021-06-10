@@ -484,6 +484,7 @@ struct ColumnInfo
 	}
 	std::variant<int, long long, unsigned long long, std::string, double> readColLow(std::string &data)
 	{
+		//printf("[%s]\n", data.c_str());
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
 			/*
@@ -646,7 +647,7 @@ struct PairRowDataCmp
 {
 	RowDataCmp cmp;
 	PairRowDataCmp(const std::vector<PrimeKeyInfo> &keys) : cmp(keys) {}
-	bool operator()(const std::pair<RowData, fastIO::IN &> &lhs, const std::pair<RowData, fastIO::IN> &rhs) const
+	bool operator()(const std::pair<RowData, std::shared_ptr<fastIO::IN>> &lhs, const std::pair<RowData, std::shared_ptr<fastIO::IN>> &rhs) const
 	{
 		return cmp(lhs.first, rhs.first);
 	}
@@ -708,11 +709,11 @@ struct TableInfo
 		std::vector<std::string> vecStr;
 		splitStr(rowStr, vecStr);
 		RowData rowData;
-		printf("%d %d\n", vecStr.size(), columns.size());
-		printf("[%s]\n", rowStr.c_str());
+		printf("%d %d--\n", columns.size(), vecStr.size());
+		//if (columns.size() != vecStr.size())
+		std::cout << rowStr << std::endl;
 		for (size_t i = 0; i < columns.size(); i++)
-			rowData.RowValue.emplace_back(columns[i].readColLow(vecStr[i]));
-		printf("%d-----\n", rowData.RowValue.size());
+			rowData.RowValue.emplace_back(columns[i].readCol(vecStr[i]));
 		return rowData;
 	}
 	void sortDatas()
@@ -776,41 +777,46 @@ struct TableInfo
 	}
 	void merge(std::vector<std::string> filePaths, std::string outPath)
 	{
-		std::priority_queue<std::pair<RowData, fastIO::IN &>, std::vector<std::pair<RowData, fastIO::IN &>>,
+		std::priority_queue<std::pair<RowData, std::shared_ptr<fastIO::IN>>, std::vector<std::pair<RowData, std::shared_ptr<fastIO::IN>>>,
 							PairRowDataCmp>
 			q{PairRowDataCmp(primeKeys)};
-		std::vector<fastIO::IN> files;
-		for (auto &path : filePaths)
+
+		for (std::string filePath : filePaths)
 		{
-			files.emplace_back(path);
-			std::string rowStr = files.back().readLine();
+			auto file = std::make_shared<fastIO::IN>(fastIO::IN(filePath));
+			std::string rowStr = file->readLine();
+			printf("[%s]-----\n", filePath.c_str());
+			printf("[%s] %d\n", rowStr.c_str(), file->IOerror);
 			if (rowStr == "")
 				continue;
-			q.push({readRowLow(rowStr), files.back()});
+			q.push({readRowLow(rowStr), file});
 		}
-		printf("---\n");
 		fastIO::OUT outFile(outPath);
 		bool isFirst = true;
 		std::shared_ptr<RowData> last = nullptr;
 		auto equal = RowDataEqual(primeKeys);
+		int p = 0;
 		while (true)
 		{
-			auto top = q.top();
+			auto topRow = q.top().first;
+			auto topIn = q.top().second;
 			q.pop();
-			std::string rowStr = top.second.readLine();
-			if (last == nullptr || !equal(*last, top.first))
+			if (last == nullptr || !equal(*last, topRow))
 			{
-				sink(top.first, outFile, isFirst);
-				last = std::make_shared<RowData>(top.first);
+				sink(topRow, outFile, isFirst);
+				last = std::make_shared<RowData>(topRow);
 			}
+			printf("--[%d %d]\n", topIn, topIn->IOerror);
+			std::string rowStr = topIn->readLine();
+			printf("[%s] %d\n", rowStr.c_str(), topIn->IOerror);
 			if (rowStr == "")
 			{
 				if (q.empty())
 					break;
 				continue;
 			}
-			top.first = readRowLow(rowStr);
-			q.push(top);
+			topRow = readRowLow(rowStr);
+			q.push({topRow, topIn});
 		}
 	}
 	void finalSink(std::string path)
@@ -821,6 +827,7 @@ struct TableInfo
 			std::string filePath = path + "/" + std::to_string(i) + "/" + SINK_FILE_NAME_TEMPLATE + tableName;
 			if (!std::ifstream(filePath).is_open())
 				break;
+			printf("%s\n", filePath.c_str());
 			filePaths.push_back(filePath);
 		}
 		merge(filePaths, path + "/" + SINK_FILE_NAME_TEMPLATE + tableName);

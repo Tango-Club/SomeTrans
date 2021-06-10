@@ -193,7 +193,6 @@ int main(int argc, char *argv[])
 	std::cout << "[End]\tload input Start file." << std::endl;
 
 	std::cout << "[Start]\tmerge data file." << std::endl;
-	// load schema information.
 	demo->mergeData();
 	std::cout << "[End]\tmerge data file." << std::endl;
 

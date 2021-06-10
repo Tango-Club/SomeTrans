@@ -2,21 +2,25 @@ namespace fastIO
 {
 	using ll = long long;
 	using ull = unsigned long long;
-	constexpr int BUF_SIZE = 1000000;
-	constexpr int OUT_SIZE = 1000000;
+	constexpr int BUF_SIZE = 100000;
+	constexpr int OUT_SIZE = 100000;
 	constexpr ll mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
 						  1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
 						  100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
-	bool open_success = false;
 	class IN
 	{
 	public:
 		char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
+		bool open_success = false;
+		bool IOerror = false;
 		FILE *fp;
 		IN(std::string path)
 		{
 			fp = fopen(path.c_str(), "r");
 			open_success = (fp == NULL ? false : true);
+			assert(open_success);
+			IOerror = false;
+			printf("%s %d %d\n", path.c_str(), IOerror, open_success);
 		}
 		~IN()
 		{
@@ -24,16 +28,17 @@ namespace fastIO
 				fclose(fp);
 		}
 		//fread->read
-		bool IOerror = 0;
 		inline char nc()
 		{
 			if (p1 == pend)
 			{
 				p1 = buf;
 				pend = buf + fread(buf, 1, BUF_SIZE, fp);
-				if (pend == p1)
+				if (p1 == pend)
 				{
-					IOerror = 1;
+					printf("err:%d\n", errno);
+					printf("ferr:%d\n", ferror(fp));
+					IOerror = true;
 					return -1;
 				}
 			}
@@ -60,13 +65,13 @@ namespace fastIO
 		FILE *fp;
 		Ostream_fwrite()
 		{
-			buf = new char[BUF_SIZE];
+			buf = new char[BUF_SIZE + 5];
 			p1 = buf;
 			pend = buf + BUF_SIZE;
 		}
 		void out(char ch)
 		{
-			if (p1 == pend)
+			if (p1 >= pend)
 			{
 				fwrite(buf, 1, BUF_SIZE, fp);
 				p1 = buf;
@@ -149,11 +154,16 @@ namespace fastIO
 				p1 = buf;
 			}
 		}
-		~Ostream_fwrite() { flush(); }
+		~Ostream_fwrite()
+		{
+			flush();
+			delete buf;
+		}
 	};
 	class OUT
 	{
 	public:
+		bool open_success = false;
 		Ostream_fwrite Ostream;
 		FILE *fp;
 		OUT(std::string path)
@@ -161,6 +171,7 @@ namespace fastIO
 			fp = fopen(path.c_str(), "w");
 			Ostream.fp = fp;
 			open_success = (fp == NULL ? false : true);
+			assert(open_success);
 		}
 		~OUT()
 		{
