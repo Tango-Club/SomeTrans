@@ -20,7 +20,7 @@ namespace fastIO
 			open_success = (fp == NULL ? false : true);
 			assert(open_success);
 			IOerror = false;
-			printf("%s %d %d\n", path.c_str(), IOerror, open_success);
+			//printf("%s %d %d\n", path.c_str(), IOerror, open_success);
 		}
 		~IN()
 		{
@@ -36,8 +36,8 @@ namespace fastIO
 				pend = buf + fread(buf, 1, BUF_SIZE, fp);
 				if (p1 == pend)
 				{
-					printf("err:%d\n", errno);
-					printf("ferr:%d\n", ferror(fp));
+					//printf("err:%d\n", errno);
+					//printf("ferr:%d\n", ferror(fp));
 					IOerror = true;
 					return -1;
 				}
@@ -185,7 +185,7 @@ namespace fastIO
 		inline void print(ull x) { Ostream.print(x); }
 
 		inline void print(double x, int y) { Ostream.print(x, y); }
-		inline void print(double x) { Ostream.print(x, 2); }
+		inline void print(double x) { Ostream.print(x, 0); }
 
 		inline void print(char *s) { Ostream.print(s); }
 		inline void print(const std::string &s)

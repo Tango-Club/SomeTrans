@@ -367,10 +367,8 @@ struct ColumnInfo
 			{
 				if (c <= '9' && c >= '0')
 					continue;
-				/*
 				if (c == ' ' || c == '-' || c == ':' || c == '.')
 					continue;
-				*/
 				return "2020-04-01 00:00:00.0";
 			}
 			return data;
@@ -484,112 +482,20 @@ struct ColumnInfo
 	}
 	std::variant<int, long long, unsigned long long, std::string, double> readColLow(std::string &data)
 	{
-		//printf("[%s]\n", data.c_str());
+		if (data.length() == 1 && data[0] == '0')
+			return 0;
 		if (this->columnDef.type == ValueType::Vtinyint)
-		{
-			/*
-			int
-			Signed [-128,127]
-			Unsigned [0,255]
-			*/
-			if (!isInteger(data))
-				return 0;
-			if (!this->isUnsigned)
-			{
-				int x = std::stoi(data);
-				if (x > 127 || x < -128)
-					return 0;
-				return x;
-			}
-			else
-			{
-				if (data[0] == '-')
-					return 0;
-				int x = std::stoi(data);
-				if (x > 255)
-					return 0;
-				return x;
-			}
-		}
+			return std::stoi(data);
 		if (this->columnDef.type == ValueType::Vsmallint)
-		{
-			/*
-			int
-			Signed [-32768,32767]
-			Unsigned [0,65535]
-			*/
-			if (!isInteger(data))
-				return 0;
-			if (!this->isUnsigned)
-			{
-				int x = std::stoi(data);
-				if (x > 32767 || x < -32768)
-					return 0;
-				return x;
-			}
-			else
-			{
-				int x = std::stoi(data);
-				if (data[0] == '-')
-					return 0;
-				if (x > 65535)
-					return 0;
-				return x;
-			}
-		}
+			return std::stoi(data);
 		if (this->columnDef.type == ValueType::Vint)
-		{
-			/*
-			long long
-			Signed [-2147483648,2147483647]
-			Unsigned [0,4294967295]
-			*/
-			if (!isInteger(data))
-				return 0;
-
-			if (!this->isUnsigned)
-			{
-				long long x = std::stoll(data);
-				if (x > 2147483647 || x < -2147483648)
-					return 0;
-				return x;
-			}
-			else
-			{
-				if (data[0] == '-')
-					return 0;
-				long long x = std::stoll(data);
-				if (x > 4294967295)
-					return 0;
-				return x;
-			}
-		}
+			return std::stoll(data);
 		if (this->columnDef.type == ValueType::Vbigint)
 		{
-			/*
-			ll/ull
-			Signed [-9223372036854775808,9223372036854775807]
-			Unsigned [0,18446744073709551615]
-			*/
-			if (!isInteger(data))
-				return 0;
-			try
-			{
-				if (!this->isUnsigned)
-				{
-					long long x = std::stoll(data);
-					return x;
-				}
-				else
-				{
-					unsigned long long x = std::stoull(data);
-					return x;
-				}
-			}
-			catch (const std::exception &)
-			{
-			}
-			return 0;
+			if (!this->isUnsigned)
+				return std::stoll(data);
+			else
+				return std::stoull(data);
 		}
 		return data;
 	}
@@ -649,7 +555,7 @@ struct PairRowDataCmp
 	PairRowDataCmp(const std::vector<PrimeKeyInfo> &keys) : cmp(keys) {}
 	bool operator()(const std::pair<RowData, std::shared_ptr<fastIO::IN>> &lhs, const std::pair<RowData, std::shared_ptr<fastIO::IN>> &rhs) const
 	{
-		return cmp(lhs.first, rhs.first);
+		return !cmp(lhs.first, rhs.first);
 	}
 };
 struct TableInfo
@@ -709,11 +615,11 @@ struct TableInfo
 		std::vector<std::string> vecStr;
 		splitStr(rowStr, vecStr);
 		RowData rowData;
-		printf("%d %d--\n", columns.size(), vecStr.size());
+		//printf("%d %d--\n", columns.size(), vecStr.size());
 		//if (columns.size() != vecStr.size())
-		std::cout << rowStr << std::endl;
+		//std::cout << rowStr << std::endl;
 		for (size_t i = 0; i < columns.size(); i++)
-			rowData.RowValue.emplace_back(columns[i].readCol(vecStr[i]));
+			rowData.RowValue.emplace_back(columns[i].readColLow(vecStr[i]));
 		return rowData;
 	}
 	void sortDatas()
@@ -739,7 +645,10 @@ struct TableInfo
 				else
 					dataSink.print('	');
 				if (auto pval = std::get_if<double>(&value))
-					dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
+				{
+					if (auto pval = std::get_if<double>(&value))
+						dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
+				}
 				else
 					std::visit([&](const auto &val)
 							   { dataSink.print(val); },
@@ -754,6 +663,7 @@ struct TableInfo
 	}
 	void sink(RowData &row, fastIO::OUT &dataSink, bool &isFirst)
 	{
+		this->sortDatas();
 		if (!isFirst)
 			dataSink.print('\n');
 		else
@@ -783,10 +693,10 @@ struct TableInfo
 
 		for (std::string filePath : filePaths)
 		{
-			auto file = std::make_shared<fastIO::IN>(fastIO::IN(filePath));
+			auto file = std::make_shared<fastIO::IN>(filePath);
 			std::string rowStr = file->readLine();
-			printf("[%s]-----\n", filePath.c_str());
-			printf("[%s] %d\n", rowStr.c_str(), file->IOerror);
+			//printf("[%s]-----\n", filePath.c_str());
+			//printf("[%s] %d\n", rowStr.c_str(), file->IOerror);
 			if (rowStr == "")
 				continue;
 			q.push({readRowLow(rowStr), file});
@@ -806,9 +716,9 @@ struct TableInfo
 				sink(topRow, outFile, isFirst);
 				last = std::make_shared<RowData>(topRow);
 			}
-			printf("--[%d %d]\n", topIn, topIn->IOerror);
+			//printf("--[%d %d]\n", topIn, topIn->IOerror);
 			std::string rowStr = topIn->readLine();
-			printf("[%s] %d\n", rowStr.c_str(), topIn->IOerror);
+			//printf("[%s] %d\n", rowStr.c_str(), topIn->IOerror);
 			if (rowStr == "")
 			{
 				if (q.empty())
@@ -827,7 +737,7 @@ struct TableInfo
 			std::string filePath = path + "/" + std::to_string(i) + "/" + SINK_FILE_NAME_TEMPLATE + tableName;
 			if (!std::ifstream(filePath).is_open())
 				break;
-			printf("%s\n", filePath.c_str());
+			//printf("%s\n", filePath.c_str());
 			filePaths.push_back(filePath);
 		}
 		merge(filePaths, path + "/" + SINK_FILE_NAME_TEMPLATE + tableName);
