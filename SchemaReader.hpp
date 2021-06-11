@@ -551,11 +551,16 @@ struct RowDataEqual
 };
 struct PairRowDataCmp
 {
-	RowDataCmp cmp;
-	PairRowDataCmp(const std::vector<PrimeKeyInfo> &keys) : cmp(keys) {}
-	bool operator()(const std::pair<RowData, std::shared_ptr<fastIO::IN>> &lhs, const std::pair<RowData, std::shared_ptr<fastIO::IN>> &rhs) const
+	const std::vector<PrimeKeyInfo> &primeKeys;
+	PairRowDataCmp(const std::vector<PrimeKeyInfo> &keys) : primeKeys(keys) {}
+	bool operator()(const std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>> &lhs, const std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>> &rhs) const
 	{
-		return !cmp(lhs.first, rhs.first);
+		for (auto &primeKey : this->primeKeys)
+		{
+			if (lhs.first->RowValue[primeKey.index] != rhs.first->RowValue[primeKey.index])
+				return lhs.first->RowValue[primeKey.index] > rhs.first->RowValue[primeKey.index];
+		}
+		return 0;
 	}
 };
 struct TableInfo
@@ -615,9 +620,6 @@ struct TableInfo
 		std::vector<std::string> vecStr;
 		splitStr(rowStr, vecStr);
 		RowData rowData;
-		//printf("%d %d--\n", columns.size(), vecStr.size());
-		//if (columns.size() != vecStr.size())
-		//std::cout << rowStr << std::endl;
 		for (size_t i = 0; i < columns.size(); i++)
 			rowData.RowValue.emplace_back(columns[i].readColLow(vecStr[i]));
 		return rowData;
@@ -659,7 +661,6 @@ struct TableInfo
 			if (rNums != datas.size())
 				dataSink.print('\n');
 		}
-		//std::cout << "mkdir the path file: " << path << std::endl;
 	}
 	void sink(RowData &row, fastIO::OUT &dataSink, bool &isFirst)
 	{
@@ -687,7 +688,7 @@ struct TableInfo
 	}
 	void merge(std::vector<std::string> filePaths, std::string outPath)
 	{
-		std::priority_queue<std::pair<RowData, std::shared_ptr<fastIO::IN>>, std::vector<std::pair<RowData, std::shared_ptr<fastIO::IN>>>,
+		std::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>, std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
 							PairRowDataCmp>
 			q{PairRowDataCmp(primeKeys)};
 
@@ -695,11 +696,9 @@ struct TableInfo
 		{
 			auto file = std::make_shared<fastIO::IN>(filePath);
 			std::string rowStr = file->readLine();
-			//printf("[%s]-----\n", filePath.c_str());
-			//printf("[%s] %d\n", rowStr.c_str(), file->IOerror);
 			if (rowStr == "")
 				continue;
-			q.push({readRowLow(rowStr), file});
+			q.push({std::make_shared<RowData>(readRowLow(rowStr)), file});
 		}
 		fastIO::OUT outFile(outPath);
 		bool isFirst = true;
@@ -711,21 +710,19 @@ struct TableInfo
 			auto topRow = q.top().first;
 			auto topIn = q.top().second;
 			q.pop();
-			if (last == nullptr || !equal(*last, topRow))
+			if (last == nullptr || !equal(*last, *topRow))
 			{
-				sink(topRow, outFile, isFirst);
-				last = std::make_shared<RowData>(topRow);
+				sink(*topRow, outFile, isFirst);
+				last = topRow;
 			}
-			//printf("--[%d %d]\n", topIn, topIn->IOerror);
 			std::string rowStr = topIn->readLine();
-			//printf("[%s] %d\n", rowStr.c_str(), topIn->IOerror);
 			if (rowStr == "")
 			{
 				if (q.empty())
 					break;
 				continue;
 			}
-			topRow = readRowLow(rowStr);
+			topRow = std::make_shared<RowData>(readRowLow(rowStr));
 			q.push({topRow, topIn});
 		}
 	}
@@ -737,7 +734,6 @@ struct TableInfo
 			std::string filePath = path + "/" + std::to_string(i) + "/" + SINK_FILE_NAME_TEMPLATE + tableName;
 			if (!std::ifstream(filePath).is_open())
 				break;
-			//printf("%s\n", filePath.c_str());
 			filePaths.push_back(filePath);
 		}
 		merge(filePaths, path + "/" + SINK_FILE_NAME_TEMPLATE + tableName);

@@ -3,6 +3,8 @@
 #else
 #define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
 #endif
+const int readerLim = 2;
+const int writerLim = 5;
 const std::string DATABASE_NAME = "tianchi_dts_data";														// 待处理数据库名，无需修改
 const std::string SCHEMA_FILE_DIR = "schema_info_dir";														// schema文件夹，无需修改。
 const std::string SCHEMA_FILE_NAME = "schema.info";															// schema文件名，无需修改。

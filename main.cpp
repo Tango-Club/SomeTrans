@@ -76,28 +76,35 @@ public:
 	bool loadSourceData(int dataNumber)
 	{
 		time_t startTime = getTime();
-		std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
-		std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(dataNumber);
-		std::cout << "path: " << path << std::endl;
 
 		std::string sinkPath = sinkDirectory + "/" + SINK_FILE_DIR;
 		if (opendir(sinkPath.c_str()) == NULL)
 			MKDIR(sinkPath.c_str());
-
-		std::ifstream sourceData(path);
-		if (!sourceData.is_open())
-		{
-			std::cout << "not found: sourceData " << dataNumber << std::endl;
-			return false;
-		}
 		std::vector<std::thread> threads;
-
-		parallelReadRow::RowProducter producter(path, sourceDirectory);
-		threads.emplace_back([&]()
-							 { producter.loop(); });
-
+		std::vector<parallelReadRow::RowProducter> producters;
+		for (int i = dataNumber; i < dataNumber + readerLim; i++)
+		{
+			std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
+			std::string path = sourceDirectory + "/" + SOURCE_FILE_DIR + "/" + SOURCE_FILE_NAME_TEMPLATE + std::to_string(i);
+			std::cout << "path: " << path << std::endl;
+			std::ifstream sourceData(path);
+			if (!sourceData.is_open())
+			{
+				std::cout << "not found: sourceData " << i << std::endl;
+				break;
+			}
+			producters.emplace_back(path);
+		}
+		for (auto &producter : producters)
+		{
+			parallelReadRow::aliveProducter++;
+			threads.emplace_back([&]()
+								 { producter.loop(); });
+		}
+		if (!parallelReadRow::aliveProducter)
+			return false;
 		std::vector<parallelReadRow::RowConsumer> consumers;
-		for (int i = 1; i <= 3; i++)
+		for (int i = 1; i <= writerLim; i++)
 			consumers.emplace_back(tables, sinkDirectory);
 
 		for (auto &consumer : consumers)
@@ -190,7 +197,7 @@ int main(int argc, char *argv[])
 	std::cout << "[Start]\tload input Start file." << std::endl;
 	int dataNumber = 1;
 	while (demo->loadSourceData(dataNumber))
-		dataNumber++;
+		dataNumber += readerLim;
 	std::cout << "[End]\tload input Start file." << std::endl;
 
 	std::cout << "[Start]\tmerge data file." << std::endl;
