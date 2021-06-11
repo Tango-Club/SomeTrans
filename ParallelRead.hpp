@@ -2,7 +2,9 @@ namespace parallelReadRow
 {
 	std::atomic<bool> aliveProducter;
 	std::queue<std::string> rowQueue;
-	moodycamel::ConcurrentQueue<std::string> rowQue(100000);
+	std::mutex mtx;
+	std::condition_variable cv;
+	moodycamel::ConcurrentQueue<std::string> rowQue(1000000);
 	std::atomic<int> sinkCounter = 0;
 	class RowProducter
 	{
@@ -21,6 +23,7 @@ namespace parallelReadRow
 			while (!rowQue.try_enqueue(rowStr))
 			{
 			}
+			cv.notify_all();
 		}
 		void loop()
 		{
@@ -45,6 +48,8 @@ namespace parallelReadRow
 			std::string rowStr;
 			while (aliveProducter && !rowQue.try_dequeue(rowStr))
 			{
+				std::unique_lock<std::mutex> lck(mtx);
+				cv.wait(lck);
 			}
 			if (!rowStr.length())
 				return false;
