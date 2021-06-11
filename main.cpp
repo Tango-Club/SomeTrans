@@ -81,7 +81,7 @@ public:
 		if (opendir(sinkPath.c_str()) == NULL)
 			MKDIR(sinkPath.c_str());
 		std::vector<std::thread> threads;
-		std::vector<parallelReadRow::RowProducter> producters;
+		std::vector<std::shared_ptr<parallelReadRow::RowProducter>> producters;
 		for (int i = dataNumber; i < dataNumber + readerLim; i++)
 		{
 			std::cout << "Read source_file_dir/tianchi_dts_source_data_* file" << std::endl;
@@ -93,13 +93,13 @@ public:
 				std::cout << "not found: sourceData " << i << std::endl;
 				break;
 			}
-			producters.emplace_back(path);
+			producters.emplace_back(std::make_shared<parallelReadRow::RowProducter>(path));
 		}
 		for (auto &producter : producters)
 		{
 			parallelReadRow::aliveProducter++;
 			threads.emplace_back([&]()
-								 { producter.loop(); });
+								 { producter->loop(); });
 		}
 		if (!parallelReadRow::aliveProducter)
 			return false;

@@ -11,7 +11,7 @@ echo "echo3: $3"
 echo "echo4: $4"
 APP_HOME=main.cpp
 OUT_NAME=main
-g++ $APP_HOME -std=c++17 -o $OUT_NAME  -O2
+g++-11 $APP_HOME -std=c++20 -o $OUT_NAME  -O2 -pthread
 echo "start $0 $1 $2 $3 $4"
 ./$OUT_NAME $@
 echo "end"

@@ -10,18 +10,24 @@ namespace fastIO
 	class IN
 	{
 	public:
-		char buf[BUF_SIZE + 5], *p1 = buf + BUF_SIZE, *pend = buf + BUF_SIZE;
+		char buf[BUF_SIZE + 5];
+		char *p1;
+		char *pend;
 		bool open_success = false;
 		bool IOerror = false;
 		FILE *fp;
 		IN(std::string path)
 		{
 			fp = fopen(path.c_str(), "r");
+			p1 = buf + BUF_SIZE;
+			pend = buf + BUF_SIZE;
 			open_success = (fp == NULL ? false : true);
 			assert(open_success);
 			IOerror = false;
 			//printf("%s %d %d\n", path.c_str(), IOerror, open_success);
 		}
+		IN(const IN&)=delete;	
+		IN& operator=(const IN&)=delete;	
 		~IN()
 		{
 			if (open_success)
