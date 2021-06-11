@@ -2,8 +2,8 @@ namespace fastIO
 {
 	using ll = long long;
 	using ull = unsigned long long;
-	constexpr int BUF_SIZE = 10000;
-	constexpr int OUT_SIZE = 10000;
+	constexpr int BUF_SIZE = 100000;
+	constexpr int OUT_SIZE = 100000;
 	constexpr ll mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
 						  1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
 						  100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
@@ -24,7 +24,6 @@ namespace fastIO
 			open_success = (fp == NULL ? false : true);
 			assert(open_success);
 			IOerror = false;
-			//printf("%s %d %d\n", path.c_str(), IOerror, open_success);
 		}
 		IN(const IN&)=delete;	
 		IN& operator=(const IN&)=delete;	
@@ -42,16 +41,13 @@ namespace fastIO
 				pend = buf + fread(buf, 1, BUF_SIZE, fp);
 				if (p1 == pend)
 				{
-					//printf("err:%d\n", errno);
-					//printf("ferr:%d\n", ferror(fp));
-					//perror("Error: ");
 					IOerror = true;
 					return -1;
 				}
 			}
 			return *p1++;
 		}
-		inline bool isEnd(char ch) { return ch == '\r' || ch == '\n'; }
+		inline bool isEnd(char ch) { return ch == '\n' || ch == '\r'; }
 		inline std::string readLine()
 		{
 			std::string s;
@@ -180,6 +176,8 @@ namespace fastIO
 			open_success = (fp == NULL ? false : true);
 			assert(open_success);
 		}
+		OUT(const OUT&)=delete;	
+		OUT& operator=(const OUT&)=delete;
 		~OUT()
 		{
 			Ostream.flush();

@@ -127,7 +127,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readCol(std::string &data)
+	std::variant<int, long long, unsigned long long, std::string, double> readCol(const std::string &data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -390,7 +390,7 @@ struct ColumnInfo
 			/*
 			*/
 			if (data.length() > this->length)
-				data = data.substr(0, this->length);
+				return data.substr(0, this->length);
 			return data;
 		}
 		if (this->columnDef.type == ValueType::Vvarchar)
@@ -398,7 +398,7 @@ struct ColumnInfo
 			/*
 			*/
 			if (data.length() > this->length)
-				data = data.substr(0, this->length);
+				return data.substr(0, this->length);
 			return data;
 		}
 		/*
@@ -436,7 +436,7 @@ struct ColumnInfo
 			/*
 			*/
 			if (data.length() > this->length)
-				data = data.substr(0, this->length);
+				return data.substr(0, this->length);
 			return data;
 		}
 		/*
@@ -480,7 +480,7 @@ struct ColumnInfo
 		//文本 超长字符长度
 		return 0;
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readColLow(std::string &data)
+	std::variant<int, long long, unsigned long long, std::string, double> readColLow(const std::string &data)
 	{
 		if (data.length() == 1 && data[0] == '0')
 			return 0;
@@ -490,13 +490,6 @@ struct ColumnInfo
 			return std::stoi(data);
 		if (this->columnDef.type == ValueType::Vint)
 			return std::stoll(data);
-		if (this->columnDef.type == ValueType::Vbigint)
-		{
-			if (!this->isUnsigned)
-				return std::stoll(data);
-			else
-				return std::stoull(data);
-		}
 		return data;
 	}
 };
@@ -504,10 +497,7 @@ struct IndexInfo
 { //索引声明
 	//临时
 	std::string str;
-	IndexInfo(const std::string &indexStr)
-	{
-		this->str = indexStr;
-	}
+	IndexInfo(const std::string &indexStr):str(indexStr) {}
 };
 struct PrimeKeyInfo
 { //主键声明
@@ -648,8 +638,7 @@ struct TableInfo
 					dataSink.print('	');
 				if (auto pval = std::get_if<double>(&value))
 				{
-					if (auto pval = std::get_if<double>(&value))
-						dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
+					dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
 				}
 				else
 					std::visit([&](const auto &val)
@@ -677,12 +666,7 @@ struct TableInfo
 				f = 0;
 			else
 				dataSink.print('	');
-			if (auto pval = std::get_if<double>(&value))
-				dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
-			else
-				std::visit([&](const auto &val)
-						   { dataSink.print(val); },
-						   value);
+			std::visit([&](const auto &val){ dataSink.print(val); },value);
 			cNums++;
 		}
 	}
@@ -695,7 +679,7 @@ struct TableInfo
 		for (std::string filePath : filePaths)
 		{
 			auto file = std::make_shared<fastIO::IN>(filePath);
-			std::string rowStr = file->readLine();
+			std::string rowStr(file->readLine());
 			if (rowStr == "")
 				continue;
 			q.push({std::make_shared<RowData>(readRowLow(rowStr)), file});
@@ -715,7 +699,7 @@ struct TableInfo
 				sink(*topRow, outFile, isFirst);
 				last = topRow;
 			}
-			std::string rowStr = topIn->readLine();
+			std::string rowStr(topIn->readLine());
 			if (rowStr == "")
 			{
 				if (q.empty())
