@@ -25,8 +25,8 @@ namespace fastIO
 			assert(open_success);
 			IOerror = false;
 		}
-		IN(const IN&)=delete;	
-		IN& operator=(const IN&)=delete;	
+		IN(const IN &) = delete;
+		IN &operator=(const IN &) = delete;
 		~IN()
 		{
 			if (open_success)
@@ -125,7 +125,7 @@ namespace fastIO
 			while (s1-- != s)
 				out(*s1);
 		}
-		void print(double x, int y)
+		void print(double x, size_t y)
 		{
 			if (x < -1e-12)
 				out('-'), x = -x;
@@ -176,8 +176,8 @@ namespace fastIO
 			open_success = (fp == NULL ? false : true);
 			assert(open_success);
 		}
-		OUT(const OUT&)=delete;	
-		OUT& operator=(const OUT&)=delete;
+		OUT(const OUT &) = delete;
+		OUT &operator=(const OUT &) = delete;
 		~OUT()
 		{
 			Ostream.flush();

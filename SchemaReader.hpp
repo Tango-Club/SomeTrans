@@ -88,7 +88,7 @@ struct ColumnDefType
 bool isInteger(const std::string &s)
 {
 	bool sign = (s[0] == '-');
-	for (int i = sign; i < s.length(); i++)
+	for (size_t i = sign; i < s.length(); i++)
 		if (!isdigit(s[i]))
 			return false;
 	return true;
@@ -97,7 +97,7 @@ bool isDecimal(const std::string &s)
 {
 	bool sign = (s[0] == '-');
 	bool point = false;
-	for (int i = sign; i < s.length(); i++)
+	for (size_t i = sign; i < s.length(); i++)
 		if (!isdigit(s[i]))
 		{
 			if (s[i] == '.' && point == false)
@@ -497,7 +497,7 @@ struct IndexInfo
 { //索引声明
 	//临时
 	std::string str;
-	IndexInfo(const std::string &indexStr):str(indexStr) {}
+	IndexInfo(const std::string &indexStr) : str(indexStr) {}
 };
 struct PrimeKeyInfo
 { //主键声明
@@ -637,9 +637,7 @@ struct TableInfo
 				else
 					dataSink.print('	');
 				if (auto pval = std::get_if<double>(&value))
-				{
 					dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
-				}
 				else
 					std::visit([&](const auto &val)
 							   { dataSink.print(val); },
@@ -666,13 +664,16 @@ struct TableInfo
 				f = 0;
 			else
 				dataSink.print('	');
-			std::visit([&](const auto &val){ dataSink.print(val); },value);
+			std::visit([&](const auto &val)
+					   { dataSink.print(val); },
+					   value);
 			cNums++;
 		}
 	}
 	void merge(std::vector<std::string> filePaths, std::string outPath)
 	{
-		std::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>, std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
+		std::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
+							std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
 							PairRowDataCmp>
 			q{PairRowDataCmp(primeKeys)};
 
@@ -688,7 +689,6 @@ struct TableInfo
 		bool isFirst = true;
 		std::shared_ptr<RowData> last = nullptr;
 		auto equal = RowDataEqual(primeKeys);
-		int p = 0;
 		while (true)
 		{
 			auto topRow = q.top().first;
