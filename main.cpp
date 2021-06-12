@@ -78,9 +78,8 @@ public:
 		time_t startTime = getTime();
 
 		std::string sinkPath = sinkDirectory + "/" + SINK_FILE_DIR;
-		if (opendir(sinkPath.c_str()) == NULL)
-			MKDIR(sinkPath.c_str());
-		std::vector<std::thread> threads;
+		createPath(sinkPath);
+		std::vector<std::shared_ptr<std::thread>> threads;
 		std::vector<std::shared_ptr<parallelReadRow::RowProducter>> producters;
 		for (int i = dataNumber; i < dataNumber + readerLim; i++)
 		{
@@ -98,8 +97,8 @@ public:
 		for (auto &producter : producters)
 		{
 			parallelReadRow::aliveProducter++;
-			threads.emplace_back([&]()
-								 { producter->loop(); });
+			threads.emplace_back(std::make_shared<std::thread>([&]()
+															   { producter->loop(); }));
 		}
 		if (!parallelReadRow::aliveProducter)
 			return false;
@@ -108,11 +107,11 @@ public:
 			consumers.emplace_back(tables, sinkDirectory);
 
 		for (auto &consumer : consumers)
-			threads.emplace_back([&]()
-								 { consumer.loop(); });
+			threads.emplace_back(std::make_shared<std::thread>([&]()
+															   { consumer.loop(); }));
 
 		for (auto &tableThread : threads)
-			tableThread.join();
+			tableThread->join();
 		time_t endTime = getTime();
 		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
 		return true;
@@ -121,20 +120,18 @@ public:
 	{
 		time_t startTime = getTime();
 		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
-		if (opendir(path.c_str()) == NULL)
-			MKDIR(path.c_str());
-
-		std::vector<std::thread> threads;
-		for (auto &table : tables)
-			threads.emplace_back([&](std::string path)
-								 { table.second.finalSink(path); },
-								 path);
-		for (auto &tableThread : threads)
-			tableThread.join();
+		createPath(path);
 		/*
+		std::vector<std::shared_ptr<std::thread>> threads;
+		for (auto &table : tables)
+			threads.emplace_back(std::make_shared<std::thread>([&](std::string path)
+															   { table.second.finalSink(path); },
+															   path));
+		for (auto &tableThread : threads)
+			tableThread->join();
+		*/
 		for (auto &table : tables)
 			table.second.finalSink(path);
-		*/
 		time_t endTime = getTime();
 		std::cout << "mergeData time use : " << endTime - startTime << std::endl;
 	}

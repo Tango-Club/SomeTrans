@@ -33,3 +33,33 @@ void splitStr(const std::string &str, std::vector<std::string> &tokens)
 	if (pre < now)
 		tokens.emplace_back(str.substr(pre, now - pre));
 }
+bool isInteger(const std::string &s)
+{
+	bool sign = (s[0] == '-');
+	for (size_t i = sign; i < s.length(); i++)
+		if (!isdigit(s[i]))
+			return false;
+	return true;
+}
+bool isDecimal(const std::string &s)
+{
+	bool sign = (s[0] == '-');
+	bool point = false;
+	for (size_t i = sign; i < s.length(); i++)
+		if (!isdigit(s[i]))
+		{
+			if (s[i] == '.' && point == false)
+				point = true;
+			else
+				return false;
+		}
+	return true;
+}
+void createPath(std::string path)
+{
+	DIR* fp = opendir(path.c_str());
+	if (fp == nullptr)
+		MKDIR(path.c_str());
+	else
+		closedir(fp);
+}

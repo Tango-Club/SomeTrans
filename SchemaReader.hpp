@@ -85,28 +85,6 @@ struct ColumnDefType
 		this->type = TypeMP.at(typeName);
 	}
 };
-bool isInteger(const std::string &s)
-{
-	bool sign = (s[0] == '-');
-	for (size_t i = sign; i < s.length(); i++)
-		if (!isdigit(s[i]))
-			return false;
-	return true;
-}
-bool isDecimal(const std::string &s)
-{
-	bool sign = (s[0] == '-');
-	bool point = false;
-	for (size_t i = sign; i < s.length(); i++)
-		if (!isdigit(s[i]))
-		{
-			if (s[i] == '.' && point == false)
-				point = true;
-			else
-				return false;
-		}
-	return true;
-}
 struct ColumnInfo
 { //列声明
 	std::string name;
@@ -689,7 +667,7 @@ struct TableInfo
 		bool isFirst = true;
 		std::shared_ptr<RowData> last = nullptr;
 		auto equal = RowDataEqual(primeKeys);
-		while (true)
+		while (!q.empty())
 		{
 			auto topRow = q.top().first;
 			auto topIn = q.top().second;

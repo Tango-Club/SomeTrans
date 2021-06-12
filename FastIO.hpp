@@ -2,8 +2,7 @@ namespace fastIO
 {
 	using ll = long long;
 	using ull = unsigned long long;
-	constexpr int BUF_SIZE = 100000;
-	constexpr int OUT_SIZE = 100000;
+	constexpr int BUF_SIZE = 10000;
 	constexpr ll mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
 						  1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
 						  100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
@@ -64,11 +63,11 @@ namespace fastIO
 	struct Ostream_fwrite
 	{
 		char s[15], *s1;
-		char *buf, *p1, *pend;
+		char buf[BUF_SIZE + 5];
+		char *p1, *pend;
 		FILE *fp;
 		Ostream_fwrite()
 		{
-			buf = new char[BUF_SIZE + 5];
 			p1 = buf;
 			pend = buf + BUF_SIZE;
 		}
@@ -160,8 +159,9 @@ namespace fastIO
 		~Ostream_fwrite()
 		{
 			flush();
-			delete buf;
 		}
+		Ostream_fwrite(const Ostream_fwrite &) = delete;
+		Ostream_fwrite &operator=(const Ostream_fwrite &) = delete;
 	};
 	class OUT
 	{

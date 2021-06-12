@@ -2,7 +2,7 @@ namespace parallelReadRow
 {
 	std::atomic<int> aliveProducter;
 	std::queue<std::string> rowQueue;
-	moodycamel::ConcurrentQueue<std::string> rowQue(1000000);
+	moodycamel::ConcurrentQueue<std::string> rowQue(10000);
 	std::atomic<int> sinkCounter = 0;
 	class RowProducter
 	{
@@ -38,7 +38,7 @@ namespace parallelReadRow
 		bool consume()
 		{
 			std::string rowStr;
-			while (aliveProducter && !rowQue.try_dequeue(rowStr))
+			while (!rowQue.try_dequeue(rowStr) && aliveProducter)
 			{
 			}
 			if (!rowStr.length())
@@ -60,17 +60,16 @@ namespace parallelReadRow
 		void sinkData()
 		{
 			std::string path = sinkDirectory + "/" + SINK_FILE_DIR + "/" + std::to_string(sinkCounter++);
-			if (opendir(path.c_str()) == NULL)
-				MKDIR(path.c_str());
-			std::vector<std::thread> threads;
+			createPath(path);
+			std::vector<std::shared_ptr<std::thread>> threads;
 			for (auto &table : tables)
 			{
-				threads.emplace_back([&](std::string path)
-									 { table.second.sink(path); },
-									 path);
+				threads.emplace_back(std::make_shared<std::thread>([&](std::string path)
+																   { table.second.sink(path); },
+																   path));
 			}
 			for (auto &tableThread : threads)
-				tableThread.join();
+				tableThread->join();
 		}
 		void loop()
 		{
