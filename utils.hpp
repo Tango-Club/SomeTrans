@@ -3,7 +3,7 @@
 #else
 #define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
 #endif
-const int readerLim = 5;
+const int readerLim = 3;
 const int writerLim = 10;
 const std::string DATABASE_NAME = "tianchi_dts_data";														// 待处理数据库名，无需修改
 const std::string SCHEMA_FILE_DIR = "schema_info_dir";														// schema文件夹，无需修改。
@@ -57,7 +57,7 @@ bool isDecimal(const std::string &s)
 }
 void createPath(std::string path)
 {
-	DIR* fp = opendir(path.c_str());
+	DIR *fp = opendir(path.c_str());
 	if (fp == nullptr)
 		MKDIR(path.c_str());
 	else

@@ -121,7 +121,7 @@ public:
 		time_t startTime = getTime();
 		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
 		createPath(path);
-		/*
+
 		std::vector<std::shared_ptr<std::thread>> threads;
 		for (auto &table : tables)
 			threads.emplace_back(std::make_shared<std::thread>([&](std::string path)
@@ -129,9 +129,6 @@ public:
 															   path));
 		for (auto &tableThread : threads)
 			tableThread->join();
-		*/
-		for (auto &table : tables)
-			table.second.finalSink(path);
 		time_t endTime = getTime();
 		std::cout << "mergeData time use : " << endTime - startTime << std::endl;
 	}
