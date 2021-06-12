@@ -198,5 +198,10 @@ namespace fastIO
 			for (auto &c : s)
 				print(c);
 		}
+		inline void print(const std::string_view &s)
+		{
+			for (auto &c : s)
+				print(c);
+		}
 	};
 };

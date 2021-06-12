@@ -30,6 +30,7 @@ namespace parallelReadRow
 	public:
 		std::string sinkDirectory;
 		std::unordered_map<std::string, TableInfo> tables;
+		std::vector<std::string>rawDatas;
 		RowConsumer(std::unordered_map<std::string, TableInfo> tableinfo, std::string sinkDirectoryArg)
 			: tables(tableinfo)
 		{
@@ -43,13 +44,14 @@ namespace parallelReadRow
 			}
 			if (!rowStr.length())
 				return false;
-			std::vector<std::string> vecStr;
-			splitStr(rowStr, vecStr);
+			rawDatas.emplace_back(rowStr);
+			std::vector<std::string_view> vecStr;
+			splitStr(rawDatas.back(), vecStr);
 			auto &op = vecStr[0];
 			auto &tableName = vecStr[2];
 			if (op == "I")
 			{
-				tables.at(tableName).readRow(vecStr);
+				tables.at(std::string(tableName)).readRow(vecStr);
 			}
 			else
 			{

@@ -60,7 +60,7 @@ const std::unordered_map<std::string, ValueType> TypeMP{
 	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
-	std::vector<std::variant<int, long long, unsigned long long, std::string, double>> RowValue;
+	std::vector<std::variant<int, long long, unsigned long long, std::string_view, double>> RowValue;
 };
 struct ColumnDefType
 { //数据类型
@@ -85,28 +85,6 @@ struct ColumnDefType
 		this->type = TypeMP.at(typeName);
 	}
 };
-bool isInteger(const std::string &s)
-{
-	bool sign = (s[0] == '-');
-	for (size_t i = sign; i < s.length(); i++)
-		if (!isdigit(s[i]))
-			return false;
-	return true;
-}
-bool isDecimal(const std::string &s)
-{
-	bool sign = (s[0] == '-');
-	bool point = false;
-	for (size_t i = sign; i < s.length(); i++)
-		if (!isdigit(s[i]))
-		{
-			if (s[i] == '.' && point == false)
-				point = true;
-			else
-				return false;
-		}
-	return true;
-}
 struct ColumnInfo
 { //列声明
 	std::string name;
@@ -127,7 +105,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readCol(const std::string &data)
+	std::variant<int, long long, unsigned long long, std::string_view, double> readCol(std::string_view data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -140,7 +118,7 @@ struct ColumnInfo
 				return 0;
 			if (!this->isUnsigned)
 			{
-				int x = std::stoi(data);
+				int x = std::stoi(std::string(data));
 				if (x > 127 || x < -128)
 					return 0;
 				return x;
@@ -149,7 +127,7 @@ struct ColumnInfo
 			{
 				if (data[0] == '-')
 					return 0;
-				int x = std::stoi(data);
+				int x = std::stoi(std::string(data));
 				if (x > 255)
 					return 0;
 				return x;
@@ -166,14 +144,14 @@ struct ColumnInfo
 				return 0;
 			if (!this->isUnsigned)
 			{
-				int x = std::stoi(data);
+				int x = std::stoi(std::string(data));
 				if (x > 32767 || x < -32768)
 					return 0;
 				return x;
 			}
 			else
 			{
-				int x = std::stoi(data);
+				int x = std::stoi(std::string(data));
 				if (data[0] == '-')
 					return 0;
 				if (x > 65535)
@@ -226,7 +204,7 @@ struct ColumnInfo
 
 			if (!this->isUnsigned)
 			{
-				long long x = std::stoll(data);
+				long long x = std::stoll(std::string(data));
 				if (x > 2147483647 || x < -2147483648)
 					return 0;
 				return x;
@@ -235,7 +213,7 @@ struct ColumnInfo
 			{
 				if (data[0] == '-')
 					return 0;
-				long long x = std::stoll(data);
+				long long x = std::stoll(std::string(data));
 				if (x > 4294967295)
 					return 0;
 				return x;
@@ -254,12 +232,12 @@ struct ColumnInfo
 			{
 				if (!this->isUnsigned)
 				{
-					long long x = std::stoll(data);
+					long long x = std::stoll(std::string(data));
 					return x;
 				}
 				else
 				{
-					unsigned long long x = std::stoull(data);
+					unsigned long long x = std::stoull(std::string(data));
 					return x;
 				}
 			}
@@ -314,7 +292,7 @@ struct ColumnInfo
 			*/
 			if (isDecimal(data))
 			{
-				double x = std::stod(data);
+				double x = std::stod(std::string(data));
 				return x;
 			}
 			return 0;
@@ -480,16 +458,16 @@ struct ColumnInfo
 		//文本 超长字符长度
 		return 0;
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readColLow(const std::string &data)
+	std::variant<int, long long, unsigned long long, std::string_view, double> readColLow(std::string_view data)
 	{
 		if (data.length() == 1 && data[0] == '0')
 			return 0;
 		if (this->columnDef.type == ValueType::Vtinyint)
-			return std::stoi(data);
+			return std::stoi(std::string(data));
 		if (this->columnDef.type == ValueType::Vsmallint)
-			return std::stoi(data);
+			return std::stoi(std::string(data));
 		if (this->columnDef.type == ValueType::Vint)
-			return std::stoll(data);
+			return std::stoll(std::string(data));
 		return data;
 	}
 };
@@ -598,16 +576,16 @@ struct TableInfo
 			primeKeys.emplace_back(PrimeKeyInfo(doc, columns));
 		}
 	}
-	void readRow(std::vector<std::string> &vecStr)
+	void readRow(const std::vector<std::string_view> &vecStr)
 	{
 		RowData rowData;
 		for (size_t i = 0; i < columns.size(); i++)
 			rowData.RowValue.emplace_back(columns[i].readCol(vecStr[i + 3]));
 		this->datas.emplace_back(rowData);
 	}
-	RowData readRowLow(std::string rowStr)
+	RowData readRowLow(std::string_view rowStr)
 	{
-		std::vector<std::string> vecStr;
+		std::vector<std::string_view> vecStr;
 		splitStr(rowStr, vecStr);
 		RowData rowData;
 		for (size_t i = 0; i < columns.size(); i++)
@@ -676,14 +654,15 @@ struct TableInfo
 							std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
 							PairRowDataCmp>
 			q{PairRowDataCmp(primeKeys)};
-
+		std::vector<std::string> rawDatas;
 		for (std::string filePath : filePaths)
 		{
 			auto file = std::make_shared<fastIO::IN>(filePath);
 			std::string rowStr(file->readLine());
 			if (rowStr == "")
 				continue;
-			q.push({std::make_shared<RowData>(readRowLow(rowStr)), file});
+			rawDatas.emplace_back(rowStr);
+			q.push({std::make_shared<RowData>(readRowLow(rawDatas.back())), file});
 		}
 		fastIO::OUT outFile(outPath);
 		bool isFirst = true;
@@ -706,7 +685,8 @@ struct TableInfo
 					break;
 				continue;
 			}
-			topRow = std::make_shared<RowData>(readRowLow(rowStr));
+			rawDatas.emplace_back(rowStr);
+			topRow = std::make_shared<RowData>(readRowLow(rawDatas.back()));
 			q.push({topRow, topIn});
 		}
 	}

@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+#include <string_view>
 #include <algorithm>
 #include <atomic>
 #include <chrono>
