@@ -1,8 +1,7 @@
 namespace parallelReadRow
 {
 	std::atomic<int> aliveProducter;
-	std::queue<std::string> rowQueue;
-	moodycamel::ConcurrentQueue<std::string> rowQue(10000);
+	moodycamel::ConcurrentQueue<std::string> rowQue(1000000);
 	std::atomic<int> sinkCounter = 0;
 	class RowProducter
 	{

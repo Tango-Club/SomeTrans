@@ -583,7 +583,7 @@ struct TableInfo
 			rowData.RowValue.emplace_back(columns[i].readCol(vecStr[i + 3]));
 		this->datas.emplace_back(rowData);
 	}
-	RowData readRowLow(std::string rowStr)
+	RowData readRowLow(const std::string &rowStr)
 	{
 		std::vector<std::string> vecStr;
 		splitStr(rowStr, vecStr);
@@ -595,41 +595,10 @@ struct TableInfo
 	void sortDatas()
 	{
 		std::sort(datas.begin(), datas.end(), RowDataCmp(primeKeys));
-		datas.erase(unique(datas.begin(), datas.end(), RowDataEqual(primeKeys)), datas.end());
+		//datas.erase(unique(datas.begin(), datas.end(), RowDataEqual(primeKeys)), datas.end());
 	}
-	void sink(std::string path)
+	void sink(const RowData &row, fastIO::OUT &dataSink, bool &isFirst)
 	{
-		this->sortDatas();
-		path += "/tianchi_dts_sink_data_" + this->tableName;
-		remove(path.c_str());
-		fastIO::OUT dataSink(path);
-		size_t rNums = 0;
-		for (auto &row : datas)
-		{
-			bool f = 1;
-			size_t cNums = 0;
-			for (auto &value : row.RowValue)
-			{
-				if (f)
-					f = 0;
-				else
-					dataSink.print('	');
-				if (auto pval = std::get_if<double>(&value))
-					dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
-				else
-					std::visit([&](const auto &val)
-							   { dataSink.print(val); },
-							   value);
-				cNums++;
-			}
-			rNums++;
-			if (rNums != datas.size())
-				dataSink.print('\n');
-		}
-	}
-	void sink(RowData &row, fastIO::OUT &dataSink, bool &isFirst)
-	{
-		this->sortDatas();
 		if (!isFirst)
 			dataSink.print('\n');
 		else
@@ -642,17 +611,38 @@ struct TableInfo
 				f = 0;
 			else
 				dataSink.print('	');
-			std::visit([&](const auto &val)
-					   { dataSink.print(val); },
-					   value);
+			if (auto pval = std::get_if<double>(&value))
+				dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
+			else
+				std::visit([&](const auto &val)
+						   { dataSink.print(val); },
+						   value);
 			cNums++;
 		}
 	}
+	void sink(std::string path)
+	{
+		this->sortDatas();
+		path += "/tianchi_dts_sink_data_" + this->tableName;
+		remove(path.c_str());
+		fastIO::OUT dataSink(path);
+		std::shared_ptr<RowData> last = nullptr;
+		auto equal = RowDataEqual(primeKeys);
+		bool isFirst = true;
+		for (auto &row : datas)
+		{
+			if (last == nullptr || !equal(*last, row))
+			{
+				sink(row, dataSink, isFirst);
+				last = std::make_shared<RowData>(row);
+			}
+		}
+		datas.clear();
+	}
 	void merge(std::vector<std::string> filePaths, std::string outPath)
 	{
-		std::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
-							std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
-							PairRowDataCmp>
+		__gnu_pbds::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
+								   PairRowDataCmp, __gnu_pbds::rc_binomial_heap_tag>
 			q{PairRowDataCmp(primeKeys)};
 
 		for (std::string filePath : filePaths)
