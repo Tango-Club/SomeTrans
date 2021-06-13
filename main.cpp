@@ -113,6 +113,7 @@ public:
 			threads.emplace_back(std::make_shared<std::thread>([&]()
 															   { consumer.loop(); }));
 
+
 		for (auto &tableThread : threads)
 			tableThread->join();
 		time_t endTime = getTime();
