@@ -1,6 +1,7 @@
 /*
 数据库定义
 */
+
 enum class ValueType : int
 {
 	Vtinyint,
@@ -31,7 +32,7 @@ enum class ValueType : int
 	Vlongtext
 	//文本 超长字符长度
 };
-const std::unordered_map<std::string, ValueType> TypeMP{
+const std::map<fastring, ValueType> TypeMP{
 	{"tinyint", ValueType::Vtinyint},
 	{"smallint", ValueType::Vsmallint},
 	{"mediumint", ValueType::Vmediumint},
@@ -60,7 +61,7 @@ const std::unordered_map<std::string, ValueType> TypeMP{
 	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
-	std::vector<std::variant<int, long long, unsigned long long, std::string, double>> RowValue;
+	std::vector<std::variant<int, long long, unsigned long long, fastring, double>> RowValue;
 };
 struct ColumnDefType
 { //数据类型
@@ -87,10 +88,10 @@ struct ColumnDefType
 };
 struct ColumnInfo
 { //列声明
-	std::string name;
+    fastring name;
 	int ordinal;
 	bool isUnsigned;
-	std::string charSet;
+	fastring charSet;
 	ColumnDefType columnDef;
 	size_t length;
 	int precision;
@@ -105,7 +106,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readCol(const std::string &data)
+	std::variant<int, long long, unsigned long long, fastring, double> readCol(fastring &data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -118,7 +119,8 @@ struct ColumnInfo
 				return 0;
 			if (!this->isUnsigned)
 			{
-				int x = std::stoi(data);
+
+				int x = atoi(data.c_str());
 				if (x > 127 || x < -128)
 					return 0;
 				return x;
@@ -127,7 +129,7 @@ struct ColumnInfo
 			{
 				if (data[0] == '-')
 					return 0;
-				int x = std::stoi(data);
+				int x = atoi(data.c_str());
 				if (x > 255)
 					return 0;
 				return x;
@@ -144,14 +146,14 @@ struct ColumnInfo
 				return 0;
 			if (!this->isUnsigned)
 			{
-				int x = std::stoi(data);
+				int x = atoi(data.c_str());
 				if (x > 32767 || x < -32768)
 					return 0;
 				return x;
 			}
 			else
 			{
-				int x = std::stoi(data);
+				int x = atoi(data.c_str());
 				if (data[0] == '-')
 					return 0;
 				if (x > 65535)
@@ -204,7 +206,7 @@ struct ColumnInfo
 
 			if (!this->isUnsigned)
 			{
-				long long x = std::stoll(data);
+				long long x = strtoll(data.c_str(),NULL,10);
 				if (x > 2147483647 || x < -2147483648)
 					return 0;
 				return x;
@@ -213,7 +215,7 @@ struct ColumnInfo
 			{
 				if (data[0] == '-')
 					return 0;
-				long long x = std::stoll(data);
+				long long x =strtoll(data.c_str(),NULL,10);
 				if (x > 4294967295)
 					return 0;
 				return x;
@@ -232,12 +234,12 @@ struct ColumnInfo
 			{
 				if (!this->isUnsigned)
 				{
-					long long x = std::stoll(data);
+					long long x = strtoll(data.c_str(),NULL,10);
 					return x;
 				}
 				else
 				{
-					unsigned long long x = std::stoull(data);
+					unsigned long long x = strtoull(data.c_str(),NULL,10);
 					return x;
 				}
 			}
@@ -292,7 +294,7 @@ struct ColumnInfo
 			*/
 			if (isDecimal(data))
 			{
-				double x = std::stod(data);
+				double x = strtod(data.c_str(),NULL);
 				return x;
 			}
 			return 0;
@@ -341,8 +343,9 @@ struct ColumnInfo
 			if (std::regex_match(data, result, pattern))
 				return data;
             return "2020-04-01 00:00:00.0";*/
-			for (auto &c : data)
+			for (int i=0;i<data.size();i++)
 			{
+                auto &c = data[i];
 				if (c <= '9' && c >= '0')
 					continue;
 				if (c == ' ' || c == '-' || c == ':' || c == '.')
@@ -367,7 +370,7 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			if (data.length() > this->length)
+			if (data.size() > this->length)
 				return data.substr(0, this->length);
 			return data;
 		}
@@ -375,7 +378,7 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			if (data.length() > this->length)
+			if (data.size() > this->length)
 				return data.substr(0, this->length);
 			return data;
 		}
@@ -413,7 +416,7 @@ struct ColumnInfo
 		{
 			/*
 			*/
-			if (data.length() > this->length)
+			if (data.size() > this->length)
 				return data.substr(0, this->length);
 			return data;
 		}
@@ -458,16 +461,16 @@ struct ColumnInfo
 		//文本 超长字符长度
 		return 0;
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readColLow(const std::string &data)
+	std::variant<int, long long, unsigned long long, fastring, double> readColLow(const fastring &data)
 	{
-		if (data.length() == 1 && data[0] == '0')
+		if (data.size() == 1 && data[0] == '0')
 			return 0;
 		if (this->columnDef.type == ValueType::Vtinyint)
-			return std::stoi(data);
+		    return atoi(data.c_str());
 		if (this->columnDef.type == ValueType::Vsmallint)
-			return std::stoi(data);
+			return strtoll(data.c_str(),NULL,10);
 		if (this->columnDef.type == ValueType::Vint)
-			return std::stoll(data);
+			return strtoll(data.c_str(),NULL,10);
 		return data;
 	}
 };
@@ -576,16 +579,16 @@ struct TableInfo
 			primeKeys.emplace_back(PrimeKeyInfo(doc, columns));
 		}
 	}
-	void readRow(std::vector<std::string> &vecStr)
+	void readRow(std::vector<fastring> &vecStr)
 	{
 		RowData rowData;
 		for (size_t i = 0; i < columns.size(); i++)
 			rowData.RowValue.emplace_back(columns[i].readCol(vecStr[i + 3]));
 		this->datas.emplace_back(rowData);
 	}
-	RowData readRowLow(const std::string &rowStr)
+	RowData readRowLow(const fastring &rowStr)
 	{
-		std::vector<std::string> vecStr;
+		std::vector<fastring> vecStr;
 		splitStr(rowStr, vecStr);
 		RowData rowData;
 		for (size_t i = 0; i < columns.size(); i++)
@@ -648,7 +651,7 @@ struct TableInfo
 		for (std::string filePath : filePaths)
 		{
 			auto file = std::make_shared<fastIO::IN>(filePath);
-			std::string rowStr(file->readLine());
+			fastring rowStr(file->readLine());
 			if (rowStr == "")
 				continue;
 			q.push({std::make_shared<RowData>(readRowLow(rowStr)), file});
@@ -667,7 +670,7 @@ struct TableInfo
 				sink(*topRow, outFile, isFirst);
 				last = topRow;
 			}
-			std::string rowStr(topIn->readLine());
+			fastring rowStr(topIn->readLine());
 			if (rowStr == "")
 			{
 				if (q.empty())

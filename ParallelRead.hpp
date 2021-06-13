@@ -1,7 +1,8 @@
+
 namespace parallelReadRow
 {
 	std::atomic<int> aliveProducter;
-	moodycamel::ConcurrentQueue<std::string> rowQue(1000000);
+	moodycamel::ConcurrentQueue<fastring> rowQue(1000000);
 	std::atomic<int> sinkCounter = 0;
 	class RowProducter
 	{
@@ -10,7 +11,7 @@ namespace parallelReadRow
 		RowProducter(std::string path) : sourceData(path) {}
 		void product()
 		{
-			std::string rowStr = sourceData.readLine();
+			fastring rowStr = sourceData.readLine();
 			if (sourceData.IOerror)
 				return;
 			while (!rowQue.try_enqueue(rowStr))
@@ -28,8 +29,8 @@ namespace parallelReadRow
 	{
 	public:
 		std::string sinkDirectory;
-		std::unordered_map<std::string, TableInfo> tables;
-		RowConsumer(std::unordered_map<std::string, TableInfo> tableinfo, std::string sinkDirectoryArg)
+		std::map<fastring, TableInfo> tables;
+		RowConsumer(std::map<fastring, TableInfo>tableinfo, std::string sinkDirectoryArg)
 			: tables(tableinfo)
 		{
 			sinkDirectory = sinkDirectoryArg;
@@ -42,7 +43,7 @@ namespace parallelReadRow
 			}
 			if (!rowStr.length())
 				return false;
-			std::vector<std::string> vecStr;
+			std::vector<fastring> vecStr;
 			splitStr(rowStr, vecStr);
 			auto &op = vecStr[0];
 			auto &tableName = vecStr[2];

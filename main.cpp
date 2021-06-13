@@ -14,6 +14,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -22,6 +23,8 @@
 #include <variant>
 #include <vector>
 
+
+#include "faststream/fastream.h"
 #include "concurrentqueue.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
@@ -35,6 +38,7 @@
 
 #include "ParallelRead.hpp"
 
+
 /**
  * @author dts，just for demo.
  * @author pxl, fuck demo.
@@ -45,7 +49,7 @@ class Demo
 public:
 	std::string sourceDirectory;
 	std::string sinkDirectory;
-	std::unordered_map<std::string, TableInfo> tables;
+	std::map<fastring, TableInfo> tables;
 
 public:
 	bool initialSchemaInfo()

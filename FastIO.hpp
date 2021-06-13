@@ -1,3 +1,4 @@
+
 namespace fastIO
 {
 	using ll = long long;
@@ -15,7 +16,7 @@ namespace fastIO
 		bool open_success = false;
 		bool IOerror = false;
 		FILE *fp;
-		IN(std::string path)
+		IN(fastring path)
 		{
 			fp = fopen(path.c_str(), "r");
 			p1 = buf + BUF_SIZE;
@@ -47,14 +48,14 @@ namespace fastIO
 			return *p1++;
 		}
 		inline bool isEnd(char ch) { return ch == '\n' || ch == '\r'; }
-		inline std::string readLine()
+		inline fastring readLine()
 		{
-			std::string s;
+            fastring s(30);
 			char ch = nc();
 			if (IOerror)
 				return s;
 			for (; !isEnd(ch) && !IOerror; ch = nc())
-				s.push_back(ch);
+				s.append(ch);
 			return s;
 		}
 	};
@@ -148,6 +149,11 @@ namespace fastIO
 			while (*s)
 				out(*s++);
 		}
+        void print(const char *s)
+        {
+            while (*s)
+                out(*s++);
+        }
 		void flush()
 		{
 			if (p1 != buf)
@@ -169,7 +175,7 @@ namespace fastIO
 		bool open_success = false;
 		Ostream_fwrite Ostream;
 		FILE *fp;
-		OUT(std::string path)
+		OUT(fastring path)
 		{
 			fp = fopen(path.c_str(), "w");
 			Ostream.fp = fp;
@@ -193,10 +199,14 @@ namespace fastIO
 		inline void print(double x) { Ostream.print(x, 0); }
 
 		inline void print(char *s) { Ostream.print(s); }
-		inline void print(const std::string &s)
-		{
-			for (auto &c : s)
-				print(c);
-		}
+        inline void print(fastring &s)
+        {
+            Ostream.print(s.c_str());
+        }
+        inline void print(const fastring &s)
+        {
+            Ostream.print(s.c_str());
+        }
+
 	};
 };

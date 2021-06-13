@@ -18,11 +18,13 @@ time_t getTime()
 {
 	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 }
-void splitStr(const std::string &str, std::vector<std::string> &tokens)
+void splitStr(const fastring &str, std::vector<fastring> &tokens)
 {
 	int pre = 0, now = 0;
-	for (char c : str)
+
+	for (int i=0;i<str.size();i++)
 	{
+	    char c=str[i];
 		now++;
 		if (c == '	')
 		{
@@ -33,19 +35,19 @@ void splitStr(const std::string &str, std::vector<std::string> &tokens)
 	if (pre < now)
 		tokens.emplace_back(str.substr(pre, now - pre));
 }
-bool isInteger(const std::string &s)
+bool isInteger(fastring &s)
 {
 	bool sign = (s[0] == '-');
-	for (size_t i = sign; i < s.length(); i++)
+	for (size_t i = sign; i < s.size(); i++)
 		if (!isdigit(s[i]))
 			return false;
 	return true;
 }
-bool isDecimal(const std::string &s)
+bool isDecimal(fastring &s)
 {
 	bool sign = (s[0] == '-');
 	bool point = false;
-	for (size_t i = sign; i < s.length(); i++)
+	for (size_t i = sign; i < s.size(); i++)
 		if (!isdigit(s[i]))
 		{
 			if (s[i] == '.' && point == false)
