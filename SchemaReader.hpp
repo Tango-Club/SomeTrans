@@ -641,8 +641,14 @@ struct TableInfo
 	}
 	void merge(std::vector<std::string> filePaths, std::string outPath)
 	{
+		/*
 		__gnu_pbds::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
 								   PairRowDataCmp, __gnu_pbds::rc_binomial_heap_tag>
+			q{PairRowDataCmp(primeKeys)};
+		*/
+		std::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
+							std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
+							PairRowDataCmp>
 			q{PairRowDataCmp(primeKeys)};
 
 		for (std::string filePath : filePaths)
