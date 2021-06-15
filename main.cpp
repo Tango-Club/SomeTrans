@@ -22,7 +22,7 @@
 #include <variant>
 #include <vector>
 
-#include "concurrentqueue.h"
+#include "blockingconcurrentqueue.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -111,6 +111,8 @@ public:
 
 		for (auto &tableThread : threads)
 			tableThread->join();
+		moodycamel::BlockingConcurrentQueue<std::shared_ptr<std::string>> newQue(1000000);
+		std::swap(newQue, parallelReadRow::rowQue);
 		time_t endTime = getTime();
 		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
 		return true;
