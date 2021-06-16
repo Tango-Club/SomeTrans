@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Author: dts
 # Date: 2021/05/13
@@ -12,16 +12,58 @@ echo "echo4: $4"
 APP_HOME=main.cpp
 OUT_NAME=main
 #g++-11 $APP_HOME -std=c++20 -o $OUT_NAME  -O2 -pthread
+echo "nohup ./$OUT_NAME $* & "
 echo "start $0 $1 $2 $3 $4 $@"
-nohup ./$OUT_NAME $@ & > ./lala.out
 
-for((i=0;i<100;i++))
+screen -ls
+nohup ./$OUT_NAME $* &
+
+
+for((i=1; i<=10000; i+=1))
 do
-sleep 1
+runs=`ps -aux | grep ./main | wc -l`
+printf "run: ${runs}.\n"
+date
 echo 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND'
-ps -aux | grep  ./main
+ps -aux | grep  './main --input_dir /input --output_dir'
+echo '----------------------------------------------------------------------------'
 free
+if [ ${runs} -lt 2 ]; then
+    printf "stop\n"
+    break;  q
+else
+    sleep 10
+fi
 done
 
-cat ./lala.out
 echo "end"
+
+
+
+
+
+#for((i=0;i<100;i++))
+#do
+#lala = `ps -aux | grep  './main --input_dir /input --output_dir' | wc -l`
+#if ($lala<2)
+#do
+#  g
+#done
+
+
+#for ((i=1; i<=10000; i++))
+#do
+#runs=`ps -aux | grep ./main | wc -l`
+#printf "run: ${runs}.\n"
+#date
+#echo 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND'
+#ps -aux | grep  './main --input_dir /input --output_dir'
+#free
+#if [ ${runs} -lt 2 ]; then
+#    printf "stop\n"
+#    break;  q
+#else
+#    sleep 1
+#fi
+#done
+
