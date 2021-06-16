@@ -1,7 +1,7 @@
 namespace parallelReadRow
 {
 	std::atomic<int> aliveProducter;
-	moodycamel::BlockingConcurrentQueue<std::shared_ptr<std::string>> rowQue(100);
+	moodycamel::BlockingConcurrentQueue<std::shared_ptr<std::string>> rowQue(100000000);
 	std::atomic<int> sinkCounter = 0;
 	class RowProducter
 	{
@@ -72,8 +72,14 @@ namespace parallelReadRow
 		}
 		void loop()
 		{
+			int p = 0;
 			while (consume())
 			{
+				p++;
+				if (p % 10000 == 0)
+				{
+					sinkData();
+				}
 			}
 			sinkData();
 		}

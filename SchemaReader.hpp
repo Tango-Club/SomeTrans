@@ -60,7 +60,7 @@ const std::unordered_map<std::string, ValueType> TypeMP{
 	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
-	std::vector<std::variant<int, long long, unsigned long long, std::string, double>> RowValue;
+	std::vector<std::variant<int, long long, unsigned long long, std::string>> RowValue;
 };
 struct ColumnDefType
 { //数据类型
@@ -105,7 +105,7 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readCol(const std::string &data)
+	std::variant<int, long long, unsigned long long, std::string> readCol(const std::string &data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 		{
@@ -293,7 +293,7 @@ struct ColumnInfo
 			if (isDecimal(data))
 			{
 				double x = std::stod(data);
-				return x;
+				return dtos(x, this->columnDef.args[1]);
 			}
 			return 0;
 		}
@@ -458,10 +458,8 @@ struct ColumnInfo
 		//文本 超长字符长度
 		return 0;
 	}
-	std::variant<int, long long, unsigned long long, std::string, double> readColLow(const std::string &data)
+	std::variant<int, long long, unsigned long long, std::string> readColLow(const std::string &data)
 	{
-		if (data.length() == 1 && data[0] == '0')
-			return 0;
 		if (this->columnDef.type == ValueType::Vtinyint)
 			return std::stoi(data);
 		if (this->columnDef.type == ValueType::Vsmallint)
@@ -611,12 +609,9 @@ struct TableInfo
 				f = 0;
 			else
 				dataSink.print('	');
-			if (auto pval = std::get_if<double>(&value))
-				dataSink.print(*pval, this->columns[cNums].columnDef.args[1]);
-			else
-				std::visit([&](const auto &val)
-						   { dataSink.print(val); },
-						   value);
+			std::visit([&](const auto &val)
+					   { dataSink.print(val); },
+					   value);
 			cNums++;
 		}
 	}
@@ -638,6 +633,7 @@ struct TableInfo
 			}
 		}
 		datas.clear();
+		datas.shrink_to_fit();
 	}
 	void merge(std::vector<std::string> filePaths, std::string outPath)
 	{

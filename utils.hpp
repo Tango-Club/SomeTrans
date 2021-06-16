@@ -3,7 +3,7 @@
 #else
 #define MKDIR(a) mkdir((a), (S_IRWXU | S_IRWXG | S_IRWXO))
 #endif
-const int readerLim = 1;
+const int readerLim = 3;
 const int writerLim = 10;
 const std::string DATABASE_NAME = "tianchi_dts_data";														// 待处理数据库名，无需修改
 const std::string SCHEMA_FILE_DIR = "schema_info_dir";														// schema文件夹，无需修改。
@@ -13,6 +13,10 @@ const std::string SINK_FILE_DIR = "sink_file_dir";															// 输出文件
 const std::string SOURCE_FILE_NAME_TEMPLATE = "tianchi_dts_source_data_";									// 输入文件名，无需修改。
 const std::string SINK_FILE_NAME_TEMPLATE = "tianchi_dts_sink_data_";										// 输出文件名模板，无需修改。
 const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_line,orders,stock,warehouse"; // 待处理表集合，无需修改。
+
+constexpr long long mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
+							 1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
+							 100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
 
 time_t getTime()
 {
@@ -62,4 +66,26 @@ void createPath(std::string path)
 		MKDIR(path.c_str());
 	else
 		closedir(fp);
+}
+
+std::string dtos(double x, size_t y)
+{
+	std::string str;
+	if (x < -1e-12)
+		str += '-', x = -x;
+	x += 1e-8;
+	x *= mul[y];
+	long long x1 = (long long)floor(x);
+	if (x - floor(x) >= 0.5)
+		++x1;
+	long long x2 = x1 / mul[y], x3 = x1 - x2 * mul[y];
+	str += std::to_string(x2);
+	if (y > 0)
+	{
+		str += '.';
+		for (size_t i = 1; i < y && x3 * mul[i] < mul[y]; str += '0', ++i)
+			;
+		str += std::to_string(x3);
+	}
+	return str;
 }

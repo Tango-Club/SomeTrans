@@ -115,9 +115,16 @@ public:
 		std::cout << "loadSourceData time use : " << endTime - startTime << std::endl;
 		return true;
 	}
+	void clearQue()
+	{
+		moodycamel::BlockingConcurrentQueue<std::shared_ptr<std::string>> newQue;
+		std::swap(newQue, parallelReadRow::rowQue);
+	}
 	void mergeData()
 	{
 		time_t startTime = getTime();
+		clearQue();
+
 		std::string path = sinkDirectory + "/" + SINK_FILE_DIR;
 		createPath(path);
 
