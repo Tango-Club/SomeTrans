@@ -5,7 +5,7 @@
 #endif
 const int readerLim = 3;
 const int writerLim = 8;
-const int rowLim = 500000;
+const int rowLim = 1000000;
 const std::string DATABASE_NAME = "tianchi_dts_data";														// 待处理数据库名，无需修改
 const std::string SCHEMA_FILE_DIR = "schema_info_dir";														// schema文件夹，无需修改。
 const std::string SCHEMA_FILE_NAME = "schema.info";															// schema文件名，无需修改。
@@ -18,6 +18,64 @@ const std::string CHECK_TABLE_SETS = "customer,district,item,new_orders,order_li
 constexpr long long mul[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000,
 							 1000000000, 10000000000LL, 100000000000LL, 1000000000000LL, 10000000000000LL,
 							 100000000000000LL, 1000000000000000LL, 10000000000000000LL, 100000000000000000LL};
+
+enum class ValueType : int
+{
+	Vtinyint,
+	Vsmallint,
+	Vmediumint,
+	Vint,
+	Vbigint,
+	//整型 非法整数数值
+	Vfloat,
+	Vdouble,
+	Vdecimal,
+	//浮点型 超长浮点数精度
+	Vdate,
+	Vtime,
+	Vyear,
+	Vdatetime,
+	Vtimestamp,
+	//时间 非法时间数据
+	Vchar,
+	Vvarchar,
+	Vtinyblob,
+	Vtinytext,
+	Vblob,
+	Vtext,
+	Vmediumblob,
+	Vmediumtext,
+	Vlongblob,
+	Vlongtext
+	//文本 超长字符长度
+};
+const std::unordered_map<std::string, ValueType> TypeMP{
+	{"tinyint", ValueType::Vtinyint},
+	{"smallint", ValueType::Vsmallint},
+	{"mediumint", ValueType::Vmediumint},
+	{"int", ValueType::Vint},
+	{"bigint", ValueType::Vbigint},
+
+	{"float", ValueType::Vfloat},
+	{"double", ValueType::Vdouble},
+	{"decimal", ValueType::Vdecimal},
+
+	{"date", ValueType::Vdate},
+	{"time", ValueType::Vtime},
+	{"year", ValueType::Vyear},
+	{"datetime", ValueType::Vdatetime},
+	{"timestamp", ValueType::Vtimestamp},
+
+	{"char", ValueType::Vchar},
+	{"varchar", ValueType::Vvarchar},
+	{"tinyblob", ValueType::Vtinyblob},
+	{"tinytext", ValueType::Vtinytext},
+	{"blob", ValueType::Vblob},
+	{"text", ValueType::Vtext},
+	{"mediumblob", ValueType::Vmediumblob},
+	{"mediumtext", ValueType::Vmediumtext},
+	{"longblob", ValueType::Vlongblob},
+	{"longtext", ValueType::Vlongtext}};
 
 time_t getTime()
 {

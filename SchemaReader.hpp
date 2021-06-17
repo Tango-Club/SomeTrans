@@ -1,63 +1,6 @@
 /*
 数据库定义
 */
-enum class ValueType : int
-{
-	Vtinyint,
-	Vsmallint,
-	Vmediumint,
-	Vint,
-	Vbigint,
-	//整型 非法整数数值
-	Vfloat,
-	Vdouble,
-	Vdecimal,
-	//浮点型 超长浮点数精度
-	Vdate,
-	Vtime,
-	Vyear,
-	Vdatetime,
-	Vtimestamp,
-	//时间 非法时间数据
-	Vchar,
-	Vvarchar,
-	Vtinyblob,
-	Vtinytext,
-	Vblob,
-	Vtext,
-	Vmediumblob,
-	Vmediumtext,
-	Vlongblob,
-	Vlongtext
-	//文本 超长字符长度
-};
-const std::unordered_map<std::string, ValueType> TypeMP{
-	{"tinyint", ValueType::Vtinyint},
-	{"smallint", ValueType::Vsmallint},
-	{"mediumint", ValueType::Vmediumint},
-	{"int", ValueType::Vint},
-	{"bigint", ValueType::Vbigint},
-
-	{"float", ValueType::Vfloat},
-	{"double", ValueType::Vdouble},
-	{"decimal", ValueType::Vdecimal},
-
-	{"date", ValueType::Vdate},
-	{"time", ValueType::Vtime},
-	{"year", ValueType::Vyear},
-	{"datetime", ValueType::Vdatetime},
-	{"timestamp", ValueType::Vtimestamp},
-
-	{"char", ValueType::Vchar},
-	{"varchar", ValueType::Vvarchar},
-	{"tinyblob", ValueType::Vtinyblob},
-	{"tinytext", ValueType::Vtinytext},
-	{"blob", ValueType::Vblob},
-	{"text", ValueType::Vtext},
-	{"mediumblob", ValueType::Vmediumblob},
-	{"mediumtext", ValueType::Vmediumtext},
-	{"longblob", ValueType::Vlongblob},
-	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
 	std::vector<std::any> rowValue;
@@ -340,17 +283,9 @@ struct TableInfo
 		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
 		fastIO::OUT dataSink(path);
-		std::shared_ptr<RowData> last = nullptr;
-		auto equal = RowDataEqual(primeKeys);
 		bool isFirst = true;
 		for (auto &row : datas)
-		{
-			if (last == nullptr || !equal(*last, row))
-			{
-				sink(row, dataSink, isFirst);
-				last = std::make_shared<RowData>(row);
-			}
-		}
+			sink(row, dataSink, isFirst);
 		datas.clear();
 		datas.shrink_to_fit();
 	}
