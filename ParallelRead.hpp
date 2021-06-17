@@ -13,9 +13,7 @@ namespace parallelReadRow
 			std::string rowStr = sourceData.readLine();
 			if (sourceData.IOerror)
 				return;
-			while (!rowQue.try_enqueue(std::make_shared<std::string>(rowStr)))
-			{
-			}
+			rowQue.enqueue(std::make_shared<std::string>(rowStr));
 		}
 		void loop()
 		{
@@ -37,7 +35,7 @@ namespace parallelReadRow
 		bool consume()
 		{
 			std::shared_ptr<std::string> rowStr;
-			while (!rowQue.wait_dequeue_timed(rowStr, std::chrono::milliseconds(10)) && aliveProducter)
+			while (!rowQue.wait_dequeue_timed(rowStr, std::chrono::milliseconds(3)) && aliveProducter)
 			{
 			}
 			if (rowStr == nullptr || !rowStr->length())
@@ -76,12 +74,14 @@ namespace parallelReadRow
 			while (consume())
 			{
 				p++;
-				if (p % 10000 == 0)
+				if (p == rowLim)
 				{
+					p = 0;
 					sinkData();
 				}
 			}
-			sinkData();
+			if (p != 0)
+				sinkData();
 		}
 	};
 }

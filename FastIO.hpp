@@ -18,6 +18,8 @@ namespace fastIO
 			p1 = buf + BUF_SIZE;
 			pend = buf + BUF_SIZE;
 			open_success = (fp == NULL ? false : true);
+			if (!open_success)
+				printf("[%s]\n", path.c_str());
 			assert(open_success);
 			IOerror = false;
 		}
