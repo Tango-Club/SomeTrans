@@ -51,7 +51,22 @@ struct ColumnInfo
 	}
 	std::any readCol(const std::string &data)
 	{
-		if (this->columnDef.type == ValueType::Vtinyint)
+		if (this->columnDef.type == ValueType::Vint)
+		{
+			if (!isInteger(data))
+				return 0;
+			return std::stoi(data);
+		}
+		else if (this->columnDef.type == ValueType::Vdecimal)
+		{
+			if (isDecimal(data))
+			{
+				double x = std::stod(data);
+				return dtos(x, this->columnDef.args[1]);
+			}
+			return 0;
+		}
+		else if (this->columnDef.type == ValueType::Vtinyint)
 		{
 			if (!isInteger(data))
 				return 0;
@@ -63,29 +78,16 @@ struct ColumnInfo
 				return 0;
 			return std::stoi(data);
 		}
-		else if (this->columnDef.type == ValueType::Vint)
-		{
-			if (!isInteger(data))
-				return 0;
-			return std::stoi(data);
-		}
 		else if (this->columnDef.type == ValueType::Vbigint)
 		{
 			if (!isInteger(data))
 				return 0;
 			return std::stoll(data);
 		}
-		else if (this->columnDef.type == ValueType::Vdecimal)
-		{
-			if (isDecimal(data))
-			{
-				double x = std::stod(data);
-				return dtos(x, this->columnDef.args[1]);
-			}
-			return 0;
-		}
 		else if (this->columnDef.type == ValueType::Vdatetime)
 		{
+			if (data.length() != 21)
+				return std::string("2020-04-01 00:00:00.0");
 			for (auto &c : data)
 			{
 				if (c <= '9' && c >= '0')
@@ -235,7 +237,6 @@ struct TableInfo
 	void readRow(std::vector<std::string> &vecStr)
 	{
 		RowData rowData(vecStr.size() - 3);
-
 		for (size_t i = 0; i < columns.size(); i++)
 			rowData.rowValue[i] = columns[i].readCol(vecStr[i + 3]);
 		this->datas.emplace_back(rowData);
@@ -261,7 +262,6 @@ struct TableInfo
 		else
 			isFirst = false;
 		bool f = 1;
-		size_t cNums = 0;
 		for (auto &value : row.rowValue)
 		{
 			if (f)
@@ -274,7 +274,6 @@ struct TableInfo
 				dataSink.print(std::any_cast<int>(value));
 			else if (value.type() == typeid(long long))
 				dataSink.print(std::any_cast<long long>(value));
-			cNums++;
 		}
 	}
 	void sink(std::string path)
@@ -293,9 +292,10 @@ struct TableInfo
 	{
 		/*
 		__gnu_pbds::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
-								   PairRowDataCmp, __gnu_pbds::rc_binomial_heap_tag>
+								   PairRowDataCmp, __gnu_pbds::binary_heap_tag>
 			q{PairRowDataCmp(primeKeys)};
 		*/
+
 		std::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
 							std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
 							PairRowDataCmp>
@@ -303,6 +303,8 @@ struct TableInfo
 
 		for (std::string filePath : filePaths)
 		{
+			if (!std::ifstream(filePath).is_open())
+				continue;
 			auto file = std::make_shared<fastIO::IN>(filePath);
 			std::string rowStr(file->readLine());
 			if (rowStr == "")
@@ -340,7 +342,7 @@ struct TableInfo
 		for (int i = 0; true; i++)
 		{
 			std::string filePath = path + "/" + std::to_string(i) + "/" + SINK_FILE_NAME_TEMPLATE + tableName;
-			if (!std::ifstream(filePath).is_open())
+			if (!existPath(path + "/" + std::to_string(i)))
 				break;
 			filePaths.push_back(filePath);
 		}

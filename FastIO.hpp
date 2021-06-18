@@ -2,7 +2,7 @@ namespace fastIO
 {
 	using ll = long long;
 	using ull = unsigned long long;
-	constexpr int BUF_SIZE = 1000000;
+	constexpr int BUF_SIZE = 100000;
 	class IN
 	{
 	public:
