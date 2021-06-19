@@ -1,66 +1,10 @@
 /*
 数据库定义
 */
-enum class ValueType : int
-{
-	Vtinyint,
-	Vsmallint,
-	Vmediumint,
-	Vint,
-	Vbigint,
-	//整型 非法整数数值
-	Vfloat,
-	Vdouble,
-	Vdecimal,
-	//浮点型 超长浮点数精度
-	Vdate,
-	Vtime,
-	Vyear,
-	Vdatetime,
-	Vtimestamp,
-	//时间 非法时间数据
-	Vchar,
-	Vvarchar,
-	Vtinyblob,
-	Vtinytext,
-	Vblob,
-	Vtext,
-	Vmediumblob,
-	Vmediumtext,
-	Vlongblob,
-	Vlongtext
-	//文本 超长字符长度
-};
-const std::unordered_map<std::string, ValueType> TypeMP{
-	{"tinyint", ValueType::Vtinyint},
-	{"smallint", ValueType::Vsmallint},
-	{"mediumint", ValueType::Vmediumint},
-	{"int", ValueType::Vint},
-	{"bigint", ValueType::Vbigint},
-
-	{"float", ValueType::Vfloat},
-	{"double", ValueType::Vdouble},
-	{"decimal", ValueType::Vdecimal},
-
-	{"date", ValueType::Vdate},
-	{"time", ValueType::Vtime},
-	{"year", ValueType::Vyear},
-	{"datetime", ValueType::Vdatetime},
-	{"timestamp", ValueType::Vtimestamp},
-
-	{"char", ValueType::Vchar},
-	{"varchar", ValueType::Vvarchar},
-	{"tinyblob", ValueType::Vtinyblob},
-	{"tinytext", ValueType::Vtinytext},
-	{"blob", ValueType::Vblob},
-	{"text", ValueType::Vtext},
-	{"mediumblob", ValueType::Vmediumblob},
-	{"mediumtext", ValueType::Vmediumtext},
-	{"longblob", ValueType::Vlongblob},
-	{"longtext", ValueType::Vlongtext}};
 struct RowData
 {
-	std::vector<std::variant<int, long long, unsigned long long, std::string>> RowValue;
+	std::vector<std::any> rowValue;
+	RowData(int x) : rowValue(x) {}
 };
 struct ColumnDefType
 { //数据类型
@@ -105,191 +49,16 @@ struct ColumnInfo
 		this->precision = (doc["Precision"].IsNull() ? -1 : doc["Precision"].GetInt());
 		this->scale = (doc["Scale"].IsNull() ? -1 : doc["Scale"].GetInt());
 	}
-	std::variant<int, long long, unsigned long long, std::string> readCol(const std::string &data)
+	std::any readCol(const std::string &data)
 	{
-		if (this->columnDef.type == ValueType::Vtinyint)
-		{
-			/*
-			int
-			Signed [-128,127]
-			Unsigned [0,255]
-			*/
-			if (!isInteger(data))
-				return 0;
-			if (!this->isUnsigned)
-			{
-				int x = std::stoi(data);
-				if (x > 127 || x < -128)
-					return 0;
-				return x;
-			}
-			else
-			{
-				if (data[0] == '-')
-					return 0;
-				int x = std::stoi(data);
-				if (x > 255)
-					return 0;
-				return x;
-			}
-		}
-		if (this->columnDef.type == ValueType::Vsmallint)
-		{
-			/*
-			int
-			Signed [-32768,32767]
-			Unsigned [0,65535]
-			*/
-			if (!isInteger(data))
-				return 0;
-			if (!this->isUnsigned)
-			{
-				int x = std::stoi(data);
-				if (x > 32767 || x < -32768)
-					return 0;
-				return x;
-			}
-			else
-			{
-				int x = std::stoi(data);
-				if (data[0] == '-')
-					return 0;
-				if (x > 65535)
-					return 0;
-				return x;
-			}
-		}
-		/*
-		if (this->columnDef.type == ValueType::Vmediumint)
-		{
-			
-			not appeared
-			int
-			Signed [-8388608,8388607]
-			Unsigned [0,16777215]
-			
-			if (!isInteger(data))
-				return 0;
-			try
-			{
-				int x = std::stoi(data);
-				if (!this->isUnsigned)
-				{
-					if (x < -8388608 || x > 8388607)
-						return 0;
-					return x;
-				}
-				else
-				{
-					if (x < 0 || x > 16777215)
-						return 0;
-					return x;
-				}
-			}
-			catch (const std::exception &e)
-			{
-			}
-			return 0;
-		}
-		*/
 		if (this->columnDef.type == ValueType::Vint)
 		{
-			/*
-			long long
-			Signed [-2147483648,2147483647]
-			Unsigned [0,4294967295]
-			*/
 			if (!isInteger(data))
 				return 0;
-
-			if (!this->isUnsigned)
-			{
-				long long x = std::stoll(data);
-				if (x > 2147483647 || x < -2147483648)
-					return 0;
-				return x;
-			}
-			else
-			{
-				if (data[0] == '-')
-					return 0;
-				long long x = std::stoll(data);
-				if (x > 4294967295)
-					return 0;
-				return x;
-			}
+			return std::stoi(data);
 		}
-		if (this->columnDef.type == ValueType::Vbigint)
+		else if (this->columnDef.type == ValueType::Vdecimal)
 		{
-			/*
-			ll/ull
-			Signed [-9223372036854775808,9223372036854775807]
-			Unsigned [0,18446744073709551615]
-			*/
-			if (!isInteger(data))
-				return 0;
-			try
-			{
-				if (!this->isUnsigned)
-				{
-					long long x = std::stoll(data);
-					return x;
-				}
-				else
-				{
-					unsigned long long x = std::stoull(data);
-					return x;
-				}
-			}
-			catch (const std::exception &)
-			{
-			}
-			return 0;
-		}
-		//整型 非法整数数值
-		/*
-		if (this->columnDef.type == ValueType::Vfloat)
-		{
-			
-			not appeared
-			
-
-			if (isDecimal(data))
-			{
-				try
-				{
-					float ret = std::stof(data);
-					return ret;
-				}
-				catch (const std::exception &)
-				{
-				}
-			}
-			return 0;
-		}
-		if (this->columnDef.type == ValueType::Vdouble)
-		{
-			
-			not appeared
-			
-			if (isDecimal(data))
-			{
-				try
-				{
-					double ret = std::stod(data);
-					return ret;
-				}
-				catch (const std::exception &)
-				{
-				}
-			}
-			return 0;
-		}
-		*/
-		if (this->columnDef.type == ValueType::Vdecimal)
-		{
-			/*
-			*/
 			if (isDecimal(data))
 			{
 				double x = std::stod(data);
@@ -297,175 +66,66 @@ struct ColumnInfo
 			}
 			return 0;
 		}
-		//浮点型 超长浮点数精度
-		/*
-		if (this->columnDef.type == ValueType::Vdate)
+		else if (this->columnDef.type == ValueType::Vtinyint)
 		{
-			
-			not appeared
-			 YYYY-MM-DD 
-			 1000-01-01 
-			
-			return data;
+			if (!isInteger(data))
+				return 0;
+			return std::stoi(data);
 		}
-		if (this->columnDef.type == ValueType::Vtime)
+		else if (this->columnDef.type == ValueType::Vsmallint)
 		{
-			
-			not appeared
-			 HH:MM:SS 
-			-838:59:59
-			
-			return data;
+			if (!isInteger(data))
+				return 0;
+			return std::stoi(data);
 		}
-		if (this->columnDef.type == ValueType::Vyear)
+		else if (this->columnDef.type == ValueType::Vbigint)
 		{
-			
-			not appeared
-			 YYYY 
-			 1901 
-			
-			return data;
+			if (!isInteger(data))
+				return 0;
+			return std::stoll(data);
 		}
-		*/
-		if (this->columnDef.type == ValueType::Vdatetime)
+		else if (this->columnDef.type == ValueType::Vdatetime)
 		{
-			/*
-			 YYYY-MM-DD HH:MM:SS.xx 注意 小数点后多一个数据
-			 1000-01-01 00:00:00.0
-			*/
-
-			/*std::string regex_template("\\d{4}[-]\\d{2}[-]\\d{2}[ ]\\d{2}[:]\\d{2}[:]\\d{2}[.]\\d{1,3}");
-			std::regex pattern(regex_template, std::regex::icase);
-			std::match_results<std::string::const_iterator> result;
-
-			if (std::regex_match(data, result, pattern))
-				return data;
-            return "2020-04-01 00:00:00.0";*/
+			if (data.length() != 21)
+				return std::string("2020-04-01 00:00:00.0");
 			for (auto &c : data)
 			{
 				if (c <= '9' && c >= '0')
 					continue;
 				if (c == ' ' || c == '-' || c == ':' || c == '.')
 					continue;
-				return "2020-04-01 00:00:00.0";
+				return std::string("2020-04-01 00:00:00.0");
 			}
 			return data;
 		}
-		/*
-		if (this->columnDef.type == ValueType::Vtimestamp)
+		else if (this->columnDef.type == ValueType::Vchar)
 		{
-			
-			not appeared
-			 YYYY-MM-DD HH:MM:SS
-			 19700101080001
-			
-			return data;
-		}
-		*/
-		//时间 非法时间数据
-		if (this->columnDef.type == ValueType::Vchar)
-		{
-			/*
-			*/
 			if (data.length() > this->length)
 				return data.substr(0, this->length);
 			return data;
 		}
-		if (this->columnDef.type == ValueType::Vvarchar)
+		else if (this->columnDef.type == ValueType::Vvarchar)
 		{
-			/*
-			*/
 			if (data.length() > this->length)
 				return data.substr(0, this->length);
 			return data;
 		}
-		/*
-		if (this->columnDef.type == ValueType::Vtinyblob)
+		else if (this->columnDef.type == ValueType::Vtext)
 		{
-			
-			not appeared
-			
-			while (data.length() > this->length)
-				data.pop_back();
-			return data;
-		}
-		
-		if (this->columnDef.type == ValueType::Vtinytext)
-		{
-			
-			not appeared
-			
-			while (data.length() > this->length)
-				data.pop_back();
-			return data;
-		}
-		if (this->columnDef.type == ValueType::Vblob)
-		{
-			
-			not appeared
-			
-			while (data.length() > this->length)
-				data.pop_back();
-			return data;
-		}
-		*/
-		if (this->columnDef.type == ValueType::Vtext)
-		{
-			/*
-			*/
 			if (data.length() > this->length)
 				return data.substr(0, this->length);
 			return data;
 		}
-		/*
-		if (this->columnDef.type == ValueType::Vmediumblob)
-		{
-			
-			not appeared
-			
-			while (data.length() > this->length)
-				data.pop_back();
-			return data;
-		}
-		if (this->columnDef.type == ValueType::Vmediumtext)
-		{
-			
-			not appeared
-			
-			while (data.length() > this->length)
-				data.pop_back();
-			return data;
-		}
-		if (this->columnDef.type == ValueType::Vlongblob)
-		{
-			
-			not appeared
-			
-			while (data.length() > this->length)
-				data.pop_back();
-			return data;
-		}
-		if (this->columnDef.type == ValueType::Vlongtext)
-		{
-			
-			not appeared
-			
-			while (data.length() > this->length)
-				data.pop_back();
-			return data;
-		}
-		*/
-		//文本 超长字符长度
 		return 0;
 	}
-	std::variant<int, long long, unsigned long long, std::string> readColLow(const std::string &data)
+	std::any readColLow(const std::string &data)
 	{
 		if (this->columnDef.type == ValueType::Vtinyint)
 			return std::stoi(data);
-		if (this->columnDef.type == ValueType::Vsmallint)
+		else if (this->columnDef.type == ValueType::Vsmallint)
 			return std::stoi(data);
-		if (this->columnDef.type == ValueType::Vint)
-			return std::stoll(data);
+		else if (this->columnDef.type == ValueType::Vint)
+			return std::stoi(data);
 		return data;
 	}
 };
@@ -495,8 +155,8 @@ struct RowDataCmp
 	{
 		for (auto &primeKey : this->primeKeys)
 		{
-			if (lhs.RowValue[primeKey.index] != rhs.RowValue[primeKey.index])
-				return lhs.RowValue[primeKey.index] < rhs.RowValue[primeKey.index];
+			if (std::any_cast<int>(lhs.rowValue[primeKey.index]) != std::any_cast<int>(rhs.rowValue[primeKey.index]))
+				return std::any_cast<int>(lhs.rowValue[primeKey.index]) < std::any_cast<int>(rhs.rowValue[primeKey.index]);
 		}
 		return 0;
 	}
@@ -509,7 +169,7 @@ struct RowDataEqual
 	{
 		for (auto &primeKey : this->primeKeys)
 		{
-			if (lhs.RowValue[primeKey.index] != rhs.RowValue[primeKey.index])
+			if (std::any_cast<int>(lhs.rowValue[primeKey.index]) != std::any_cast<int>(rhs.rowValue[primeKey.index]))
 				return false;
 		}
 		return true;
@@ -523,8 +183,8 @@ struct PairRowDataCmp
 	{
 		for (auto &primeKey : this->primeKeys)
 		{
-			if (lhs.first->RowValue[primeKey.index] != rhs.first->RowValue[primeKey.index])
-				return lhs.first->RowValue[primeKey.index] > rhs.first->RowValue[primeKey.index];
+			if (std::any_cast<int>(lhs.first->rowValue[primeKey.index]) != std::any_cast<int>(rhs.first->rowValue[primeKey.index]))
+				return std::any_cast<int>(lhs.first->rowValue[primeKey.index]) > std::any_cast<int>(rhs.first->rowValue[primeKey.index]);
 		}
 		return 0;
 	}
@@ -576,18 +236,18 @@ struct TableInfo
 	}
 	void readRow(std::vector<std::string> &vecStr)
 	{
-		RowData rowData;
+		RowData rowData(vecStr.size() - 3);
 		for (size_t i = 0; i < columns.size(); i++)
-			rowData.RowValue.emplace_back(columns[i].readCol(vecStr[i + 3]));
+			rowData.rowValue[i] = columns[i].readCol(vecStr[i + 3]);
 		this->datas.emplace_back(rowData);
 	}
 	RowData readRowLow(const std::string &rowStr)
 	{
 		std::vector<std::string> vecStr;
 		splitStr(rowStr, vecStr);
-		RowData rowData;
+		RowData rowData(vecStr.size());
 		for (size_t i = 0; i < columns.size(); i++)
-			rowData.RowValue.emplace_back(columns[i].readColLow(vecStr[i]));
+			rowData.rowValue[i] = columns[i].readColLow(vecStr[i]);
 		return rowData;
 	}
 	void sortDatas()
@@ -602,17 +262,18 @@ struct TableInfo
 		else
 			isFirst = false;
 		bool f = 1;
-		size_t cNums = 0;
-		for (auto &value : row.RowValue)
+		for (auto &value : row.rowValue)
 		{
 			if (f)
 				f = 0;
 			else
 				dataSink.print('	');
-			std::visit([&](const auto &val)
-					   { dataSink.print(val); },
-					   value);
-			cNums++;
+			if (value.type() == typeid(std::string))
+				dataSink.print(std::any_cast<std::string>(value));
+			else if (value.type() == typeid(int))
+				dataSink.print(std::any_cast<int>(value));
+			else if (value.type() == typeid(long long))
+				dataSink.print(std::any_cast<long long>(value));
 		}
 	}
 	void sink(std::string path)
@@ -621,17 +282,9 @@ struct TableInfo
 		path += "/tianchi_dts_sink_data_" + this->tableName;
 		remove(path.c_str());
 		fastIO::OUT dataSink(path);
-		std::shared_ptr<RowData> last = nullptr;
-		auto equal = RowDataEqual(primeKeys);
 		bool isFirst = true;
 		for (auto &row : datas)
-		{
-			if (last == nullptr || !equal(*last, row))
-			{
-				sink(row, dataSink, isFirst);
-				last = std::make_shared<RowData>(row);
-			}
-		}
+			sink(row, dataSink, isFirst);
 		datas.clear();
 		datas.shrink_to_fit();
 	}
@@ -639,9 +292,10 @@ struct TableInfo
 	{
 		/*
 		__gnu_pbds::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
-								   PairRowDataCmp, __gnu_pbds::rc_binomial_heap_tag>
+								   PairRowDataCmp, __gnu_pbds::binary_heap_tag>
 			q{PairRowDataCmp(primeKeys)};
 		*/
+
 		std::priority_queue<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>,
 							std::vector<std::pair<std::shared_ptr<RowData>, std::shared_ptr<fastIO::IN>>>,
 							PairRowDataCmp>
@@ -649,6 +303,8 @@ struct TableInfo
 
 		for (std::string filePath : filePaths)
 		{
+			if (!std::ifstream(filePath).is_open())
+				continue;
 			auto file = std::make_shared<fastIO::IN>(filePath);
 			std::string rowStr(file->readLine());
 			if (rowStr == "")
@@ -686,7 +342,7 @@ struct TableInfo
 		for (int i = 0; true; i++)
 		{
 			std::string filePath = path + "/" + std::to_string(i) + "/" + SINK_FILE_NAME_TEMPLATE + tableName;
-			if (!std::ifstream(filePath).is_open())
+			if (!existPath(path + "/" + std::to_string(i)))
 				break;
 			filePaths.push_back(filePath);
 		}

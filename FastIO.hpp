@@ -2,7 +2,7 @@ namespace fastIO
 {
 	using ll = long long;
 	using ull = unsigned long long;
-	constexpr int BUF_SIZE = 1000000;
+	constexpr int BUF_SIZE = 100000;
 	class IN
 	{
 	public:
@@ -18,6 +18,8 @@ namespace fastIO
 			p1 = buf + BUF_SIZE;
 			pend = buf + BUF_SIZE;
 			open_success = (fp == NULL ? false : true);
+			if (!open_success)
+				printf("[%s]\n", path.c_str());
 			assert(open_success);
 			IOerror = false;
 		}

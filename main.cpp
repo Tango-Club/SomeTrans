@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <ext/pb_ds/priority_queue.hpp>
 
+#include <any>
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -19,7 +20,6 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 #include "blockingconcurrentqueue.h"
