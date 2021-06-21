@@ -48,6 +48,7 @@ namespace parallelReadRow
 				tables.at(tableName).readRow(vecStr);
 			else
 			{
+			    std::cout<<op<<std::endl;
 				assert(0);
 			}
 			return true;

@@ -16,7 +16,7 @@ echo "nohup ./$OUT_NAME $* & "
 echo "start $0 $1 $2 $3 $4 $@"
 
 screen -ls
-nohup ./$OUT_NAME $* &
+./$OUT_NAME $@ &
 
 
 for((i=1; i<=10000; i+=1))
@@ -39,31 +39,4 @@ done
 echo "end"
 
 
-
-
-
-#for((i=0;i<100;i++))
-#do
-#lala = `ps -aux | grep  './main --input_dir /input --output_dir' | wc -l`
-#if ($lala<2)
-#do
-#  g
-#done
-
-
-#for ((i=1; i<=10000; i++))
-#do
-#runs=`ps -aux | grep ./main | wc -l`
-#printf "run: ${runs}.\n"
-#date
-#echo 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND'
-#ps -aux | grep  './main --input_dir /input --output_dir'
-#free
-#if [ ${runs} -lt 2 ]; then
-#    printf "stop\n"
-#    break;  q
-#else
-#    sleep 1
-#fi
-#done
 

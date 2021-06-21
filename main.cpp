@@ -22,7 +22,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "lightweightsemaphore.h"
 #include "blockingconcurrentqueue.h"
+
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -159,9 +161,24 @@ Output:
 1. Sorted data of each table (out SINK_FILE_DIR)
 
 **/
+#include <unistd.h>
 int main(int argc, char *argv[])
 {
-	time_t startTime = getTime();
+/*
+    auto file = std::make_shared<fastIO::IN>("tianchi_dts_source_data_50");
+    std::string str;
+    freopen("outfile2","w",stdout);
+    while( (str=file->readLine())!="")
+    {
+        if(str=="")break;
+        std::cout<<str<<std::endl;
+    }
+
+
+
+    return 0;*/
+
+    time_t startTime = getTime();
 	std::shared_ptr<Demo> demo(new Demo());
 
 	static struct option long_options[] = {

@@ -9,6 +9,8 @@
 #include <atomic>
 #include <type_traits> // For std::make_signed<T>
 
+#include "concurrentqueue.h"
+
 #if defined(_WIN32)
 // Avoid including windows.h in a header; we only need a handful of
 // items, so we'll redeclare them here (this is relatively safe since
