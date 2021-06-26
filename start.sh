@@ -15,28 +15,28 @@ OUT_NAME=main
 echo "nohup ./$OUT_NAME $* & "
 echo "start $0 $1 $2 $3 $4 $@"
 
-screen -ls
-./$OUT_NAME $@ &
+#screen -ls
+./$OUT_NAME $@
 
-
-for((i=1; i<=10000; i+=1))
-do
-runs=`ps -aux | grep ./main | wc -l`
-printf "run: ${runs}.\n"
-date
-echo 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND'
-ps -aux | grep  './main --input_dir /input --output_dir'
-echo '----------------------------------------------------------------------------'
-free
-if [ ${runs} -lt 2 ]; then
-    printf "stop\n"
-    break;  q
-else
-    sleep 10
-fi
-done
-
-echo "end"
-
-
-
+#
+#for((i=1; i<=10000; i+=1))
+#do
+#runs=`ps -aux | grep ./main | wc -l`
+#printf "run: ${runs}.\n"
+#date
+#echo 'USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND'
+#ps -aux | grep  './main --input_dir /input --output_dir'
+#echo '----------------------------------------------------------------------------'
+#free
+#if [ ${runs} -lt 2 ]; then
+#    printf "stop\n"
+#    break;  q
+#else
+#    sleep 10
+#fi
+#done
+#
+#echo "end"
+#
+#
+#

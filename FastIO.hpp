@@ -2,87 +2,75 @@ namespace fastIO
 {
     using ll = long long;
     using ull = unsigned long long;
-    constexpr int BUF_SIZE = 10000;
-
+    constexpr int BUF_SIZE = 8192;
     class IN
     {
-        struct ReadBuffer{
-            char buf[BUF_SIZE+50];
-            char *p1;
-            char *pend;
-        }buffer[2];
     public:
+        char buf[BUF_SIZE + 5];
+        char *p1;
+        char *pend;
         bool open_success = false;
         bool IOerror = false;
-        bool completed=false;
-        int A,B;
-        std::shared_ptr<moodycamel::details::Semaphore> empty;
-        std::shared_ptr<moodycamel::details::Semaphore>  full;
-        std::shared_ptr<std::thread> read_deamon;
+        int fd;
+        char *start;
+        struct stat sb;
+        unsigned long long read_size=BUF_SIZE;
+        unsigned long long read_pos=0;
+        std::string path;
         IN(std::string path)
         {
-            this->empty=std::make_shared<moodycamel::details::Semaphore>(1);
-            this->full=std::make_shared<moodycamel::details::Semaphore>(0);
-            A=0;
-            B=1;
-            buffer[A].p1 = buffer[A].buf + BUF_SIZE;
-            buffer[A].pend = buffer[A].buf + BUF_SIZE;
-            buffer[B].p1 = buffer[B].buf + BUF_SIZE;
-            buffer[B].pend = buffer[B].buf + BUF_SIZE;
+          //  puts("start 1");
+            this->path=path;
+            fd = open(path.c_str(), O_RDONLY);
+            fstat(fd, &sb);
+            p1 = buf + BUF_SIZE;
+            pend = buf + BUF_SIZE;
             IOerror = false;
-            completed=false;
-            this->read_deamon=std::make_shared<std::thread>([this,path](){
-                FILE *fp;
-                fp = fopen(path.c_str(), "r");
-                this->open_success = (fp == NULL ? false : true);
-                if (! this->open_success)
-                    printf("[%s]\n", path.c_str());
-                assert( this->open_success);
-                while(1)
-                {
-                    this->empty->wait();
-                    this-> buffer[B].p1 = buffer[B].buf;
-                    this-> buffer[B].pend = buffer[B].buf + fread(buffer[B].buf, 1, BUF_SIZE, fp);
-                    if (this->buffer[B].p1 ==  this->buffer[B].pend)
-                    {
-                        completed=true;
-                        full->signal();
-                        break;
-                    }
-                    full->signal();
-                }
-                if ( this->open_success)
-                    fclose(fp);
-            });
+       //     puts("start 2");
         }
         IN(const IN &) = delete;
         IN &operator=(const IN &) = delete;
         ~IN()
         {
-            this->read_deamon->detach();
+            close(fd);
         }
         //fread->read
         inline char nc()
         {
-            if(this->completed){
-                if (buffer[A].p1 == buffer[A].pend)
+          //  puts("start3 ");
+            if (p1 == pend)
+            {
+            //    puts("start    4 ");
+                if(read_pos>=sb.st_size){
+                    IOerror = true;
+                    return -1;
+                }
+                char  *mmap_get=(char *)mmap(nullptr, read_size, PROT_READ, MAP_PRIVATE, fd, read_pos);
+                if(mmap_get == MAP_FAILED){
+                    printf("error : [%s]\n", path.c_str());
+                    open_success=false;
+                    IOerror = true;
+                    return -1;
+                }
+                unsigned long long max_read=std::min(read_size,sb.st_size-read_pos);
+
+         //       printf("ok: %llu %llu\n",sb.st_size, read_pos);
+                memcpy(buf,(char *)mmap_get,max_read);
+                munmap(mmap_get, read_size);
+                read_pos += max_read;
+                p1 = buf;
+                pend = buf + max_read;
+            //    puts(std::to_string(max_read).c_str());
+                if (p1 == pend)
                 {
                     IOerror = true;
                     return -1;
                 }
-                else
-                    return  *(buffer[A].p1)++;
             }
-            else if (buffer[A].p1 == buffer[A].pend)
-            {
-                this->full->wait();
-                std::swap(A,B);
-                this->empty->signal();
-                return nc();
-            }
-            return *(buffer[A].p1)++;
+       //     system("free > ./debug.txt 2&>1");
+            return *p1++;
         }
-        inline bool isEnd(char ch) { return ch == '\n' || ch == '\r' ; }
+        inline bool isEnd(char ch) { return ch == '\n' || ch == '\r'; }
         inline std::string readLine()
         {
             std::string s;
@@ -98,13 +86,8 @@ namespace fastIO
 
     struct Ostream_fwrite
     {
-        struct WriteBuffer{
-            char buf[BUF_SIZE+50];
-            char *p1;
-            char *pend;
-        }buffer[2];
         char s[15], *s1;
-        char buf[BUF_SIZE + 50];
+        char buf[BUF_SIZE + 5];
         char *p1, *pend;
         FILE *fp;
         Ostream_fwrite()

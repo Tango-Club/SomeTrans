@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+
 #include <ext/pb_ds/priority_queue.hpp>
 
 #include <any>
