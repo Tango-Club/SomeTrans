@@ -84,37 +84,28 @@ namespace fastIO
     };
     //fwrite->write
 
-    struct OUT
+
+
+    struct Ostream_fwrite
     {
         char s[15], *s1;
         char buf[BUF_SIZE + 5];
         char *p1, *pend;
-        FILE *fp;
-        std::string path;
         int fd;
-        unsigned long long write_pos;
-        OUT(std::string path)
+        Ostream_fwrite()
         {
+
             p1 = buf;
             pend = buf + BUF_SIZE;
-            this->path=path;
-            fd = open("./1", O_RDWR | O_CREAT | O_TRUNC,S_IRWXU);
-            write_pos=0;
         }
         void out(char ch)
         {
+           // std::cerr<<ch;
             if (p1 >= pend)
             {
-                char * start = (char *) mmap(nullptr, BUF_SIZE, PROT_WRITE, MAP_SHARED, fd, (long)write_pos);
-                if (start == MAP_FAILED) /* 判断是否映射成功 */
-                {
-                    printf("error : [%s]\n", path.c_str());
-                    return ;
-                }
-                write(fd, buf, BUF_SIZE);
-                munmap(start, BUF_SIZE);
+                //fwrite(buf, 1, BUF_SIZE, fp);
+                write(fd,buf,BUF_SIZE);
                 p1 = buf;
-                write_pos+=BUF_SIZE;
             }
             *p1++ = ch;
         }
@@ -183,6 +174,7 @@ namespace fastIO
         }
         void print(char *s)
         {
+
             while (*s)
                 out(*s++);
         }
@@ -190,29 +182,51 @@ namespace fastIO
         {
             if (p1 != buf)
             {
-               /* fwrite(buf, 1, p1 - buf, fp);
-                p1 = buf;*/
-                char * start = (char *) mmap(nullptr, BUF_SIZE, PROT_WRITE, MAP_SHARED, fd, (long)write_pos);
-                if (start == MAP_FAILED) /* 判断是否映射成功 */
-                {
-                    printf("error : [%s]\n", path.c_str());
-                    return ;
-                }
-                write(fd, buf,  p1 - buf);
-                munmap(start, BUF_SIZE);
+                //fwrite(buf, 1, p1 - buf, fp);
+                //write()
+                write(fd,buf,p1 - buf);
+                p1 = buf;
             }
         }
+        ~Ostream_fwrite()
+        {
+            flush();
+            close(fd);
+        }
+        Ostream_fwrite(const Ostream_fwrite &) = delete;
+        Ostream_fwrite &operator=(const Ostream_fwrite &) = delete;
+    };
+    class OUT
+    {
+    public:
+        Ostream_fwrite Ostream;
+        OUT(std::string path)
+        {
+            //fp = fopen(path.c_str(), "w");
+            Ostream.fd = open("./1", O_RDWR | O_CREAT ,0644);
+        }
+        OUT(const OUT &) = delete;
+        OUT &operator=(const OUT &) = delete;
+        ~OUT()
+        {
+            Ostream.flush();
+            //fclose(fp);
+
+        }
+        inline void print(int x) { Ostream.print(x); }
+        inline void print(char x) { Ostream.out(x); }
+        inline void print(ll x) { Ostream.print(x); }
+        inline void print(ull x) { Ostream.print(x); }
+
+        inline void print(double x, int y) { Ostream.print(x, y); }
+        inline void print(double x) { Ostream.print(x, 0); }
+
+        inline void print(char *s) { Ostream.print(s); }
         inline void print(const std::string &s)
         {
             for (auto &c : s)
                 print(c);
         }
-        ~OUT()
-        {
-            flush();
-            close(fd);
-        }
-        OUT(const OUT &) = delete;
-        OUT &operator=(const OUT &) = delete;
     };
+
 };
