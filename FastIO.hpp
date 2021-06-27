@@ -2,7 +2,7 @@ namespace fastIO
 {
     using ll = long long;
     using ull = unsigned long long;
-    constexpr int BUF_SIZE = 8192;
+    constexpr int BUF_SIZE = 4096*32;
     class IN
     {
     public:
@@ -84,23 +84,37 @@ namespace fastIO
     };
     //fwrite->write
 
-    struct Ostream_fwrite
+    struct OUT
     {
         char s[15], *s1;
         char buf[BUF_SIZE + 5];
         char *p1, *pend;
         FILE *fp;
-        Ostream_fwrite()
+        std::string path;
+        int fd;
+        unsigned long long write_pos;
+        OUT(std::string path)
         {
             p1 = buf;
             pend = buf + BUF_SIZE;
+            this->path=path;
+            fd = open("./1", O_RDWR | O_CREAT | O_TRUNC,S_IRWXU);
+            write_pos=0;
         }
         void out(char ch)
         {
             if (p1 >= pend)
             {
-                fwrite(buf, 1, BUF_SIZE, fp);
+                char * start = (char *) mmap(nullptr, BUF_SIZE, PROT_WRITE, MAP_SHARED, fd, (long)write_pos);
+                if (start == MAP_FAILED) /* 判断是否映射成功 */
+                {
+                    printf("error : [%s]\n", path.c_str());
+                    return ;
+                }
+                write(fd, buf, BUF_SIZE);
+                munmap(start, BUF_SIZE);
                 p1 = buf;
+                write_pos+=BUF_SIZE;
             }
             *p1++ = ch;
         }
@@ -176,51 +190,29 @@ namespace fastIO
         {
             if (p1 != buf)
             {
-                fwrite(buf, 1, p1 - buf, fp);
-                p1 = buf;
+               /* fwrite(buf, 1, p1 - buf, fp);
+                p1 = buf;*/
+                char * start = (char *) mmap(nullptr, BUF_SIZE, PROT_WRITE, MAP_SHARED, fd, (long)write_pos);
+                if (start == MAP_FAILED) /* 判断是否映射成功 */
+                {
+                    printf("error : [%s]\n", path.c_str());
+                    return ;
+                }
+                write(fd, buf,  p1 - buf);
+                munmap(start, BUF_SIZE);
             }
         }
-        ~Ostream_fwrite()
-        {
-            flush();
-        }
-        Ostream_fwrite(const Ostream_fwrite &) = delete;
-        Ostream_fwrite &operator=(const Ostream_fwrite &) = delete;
-    };
-    class OUT
-    {
-    public:
-        bool open_success = false;
-        Ostream_fwrite Ostream;
-        FILE *fp;
-        OUT(std::string path)
-        {
-            fp = fopen(path.c_str(), "w");
-            Ostream.fp = fp;
-            open_success = (fp == NULL ? false : true);
-            assert(open_success);
-        }
-        OUT(const OUT &) = delete;
-        OUT &operator=(const OUT &) = delete;
-        ~OUT()
-        {
-            Ostream.flush();
-            if (open_success)
-                fclose(fp);
-        }
-        inline void print(int x) { Ostream.print(x); }
-        inline void print(char x) { Ostream.out(x); }
-        inline void print(ll x) { Ostream.print(x); }
-        inline void print(ull x) { Ostream.print(x); }
-
-        inline void print(double x, int y) { Ostream.print(x, y); }
-        inline void print(double x) { Ostream.print(x, 0); }
-
-        inline void print(char *s) { Ostream.print(s); }
         inline void print(const std::string &s)
         {
             for (auto &c : s)
                 print(c);
         }
+        ~OUT()
+        {
+            flush();
+            close(fd);
+        }
+        OUT(const OUT &) = delete;
+        OUT &operator=(const OUT &) = delete;
     };
 };
