@@ -12,7 +12,7 @@ echo "echo4: $4"
 APP_HOME=main.cpp
 OUT_NAME=main
 #g++-11 $APP_HOME -std=c++20 -o $OUT_NAME  -O2 -pthread
-echo "nohup ./$OUT_NAME $* & "
+#echo "nohup ./$OUT_NAME $* & "
 echo "start $0 $1 $2 $3 $4 $@"
 
 #screen -ls
