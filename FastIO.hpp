@@ -86,21 +86,24 @@ namespace fastIO
 
 
 
-    struct Ostream_fwrite
+    struct OUT
     {
         char s[15], *s1;
         char buf[BUF_SIZE + 5];
         char *p1, *pend;
         int fd;
-        Ostream_fwrite()
+        std::string path;
+        OUT(std::string path)
         {
 
             p1 = buf;
             pend = buf + BUF_SIZE;
+            fd = open(path.c_str(), O_RDWR | O_CREAT ,0644);
+            this->path=path;
         }
         void out(char ch)
         {
-           // std::cerr<<ch;
+           // printf("%d ",ch);
             if (p1 >= pend)
             {
                 //fwrite(buf, 1, BUF_SIZE, fp);
@@ -108,6 +111,10 @@ namespace fastIO
                 p1 = buf;
             }
             *p1++ = ch;
+        }
+        void print(char x)
+        {
+            out(x);
         }
         void print(int x)
         {
@@ -172,6 +179,15 @@ namespace fastIO
                 print(x3);
             }
         }
+        inline void print(const std::string &s)
+        {
+          //  puts(s.c_str());
+            for (const char &c : s)
+            {
+             //   std::cerr<<s<<" ";
+                out(c);
+            }
+        }
         void print(char *s)
         {
 
@@ -188,45 +204,12 @@ namespace fastIO
                 p1 = buf;
             }
         }
-        ~Ostream_fwrite()
+        ~OUT()
         {
             flush();
             close(fd);
         }
-        Ostream_fwrite(const Ostream_fwrite &) = delete;
-        Ostream_fwrite &operator=(const Ostream_fwrite &) = delete;
-    };
-    class OUT
-    {
-    public:
-        Ostream_fwrite Ostream;
-        OUT(std::string path)
-        {
-            //fp = fopen(path.c_str(), "w");
-            Ostream.fd = open("./1", O_RDWR | O_CREAT ,0644);
-        }
         OUT(const OUT &) = delete;
         OUT &operator=(const OUT &) = delete;
-        ~OUT()
-        {
-            Ostream.flush();
-            //fclose(fp);
-
-        }
-        inline void print(int x) { Ostream.print(x); }
-        inline void print(char x) { Ostream.out(x); }
-        inline void print(ll x) { Ostream.print(x); }
-        inline void print(ull x) { Ostream.print(x); }
-
-        inline void print(double x, int y) { Ostream.print(x, y); }
-        inline void print(double x) { Ostream.print(x, 0); }
-
-        inline void print(char *s) { Ostream.print(s); }
-        inline void print(const std::string &s)
-        {
-            for (auto &c : s)
-                print(c);
-        }
     };
-
 };
